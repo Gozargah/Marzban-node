@@ -1,0 +1,8 @@
+cffi==1.15.1
+cryptography==39.0.1
+plumbum==1.8.1
+pycparser==2.21
+pyOpenSSL==23.0.0
+python-decouple==3.7
+python-dotenv==0.21.1
+rpyc==5.3.0
