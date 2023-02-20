@@ -70,6 +70,7 @@ class XrayService(rpyc.Service):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
         self.core.stop()
+        self.core = None
 
     def exposed_restart(self):
         if self.core is None:
