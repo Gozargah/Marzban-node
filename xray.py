@@ -2,8 +2,8 @@ import atexit
 import json
 import subprocess
 
-from config import SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT
-
+from config import (SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT,
+                    XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH)
 from logger import logger
 
 
@@ -102,8 +102,8 @@ class XRayConfig(dict):
 class XRayCore:
     def __init__(self,
                  config: XRayConfig,
-                 executable_path: str = "/usr/local/bin/xray",
-                 assets_path: str = "/usr/local/share/xray"):
+                 executable_path: str = XRAY_EXECUTABLE_PATH,
+                 assets_path: str = XRAY_ASSETS_PATH):
         self.executable_path = executable_path
         self.assets_path = assets_path
         self.started = False
