@@ -2,6 +2,7 @@ from socket import socket
 
 import rpyc
 
+from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
 from xray import XRayConfig, XRayCore
 
@@ -37,7 +38,8 @@ class XrayService(rpyc.Service):
 
         try:
             config = XRayConfig(config)
-            self.core = XRayCore(config)
+            self.core = XRayCore(executable_path=XRAY_EXECUTABLE_PATH,
+                                 assets_path=XRAY_ASSETS_PATH)
 
             if hasattr(self.connection.root, 'on_start'):
                 @self.core.on_start
@@ -61,7 +63,7 @@ class XrayService(rpyc.Service):
             else:
                 logger.debug("Peer doesn't have on_stop function on it's service, skipped")
 
-            self.core.start()
+            self.core.start(config)
         except Exception as exc:
             logger.error(exc)
             raise exc
@@ -72,7 +74,8 @@ class XrayService(rpyc.Service):
         self.core.stop()
         self.core = None
 
-    def exposed_restart(self):
+    def exposed_restart(self, config: str):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
-        self.core.restart()
+        config = XRayConfig(config)
+        self.core.restart(config)
