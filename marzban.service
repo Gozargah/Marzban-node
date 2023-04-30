@@ -1,0 +1,12 @@
+[Unit]
+Description=Marzban Node Service
+Documentation=https://github.com/gozargah/Marzban-node
+After=network.target nss-lookup.target
+
+[Service]
+ExecStart=/usr/bin/env python3 /var/lib/marzban-node/main.py
+Restart=on-failure
+WorkingDirectory=/var/lib/marzban-node
+
+[Install]
+WantedBy=multi-user.target
