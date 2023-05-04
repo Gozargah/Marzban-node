@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 *-dev.*
+
+# ssl
+ssl_cert.pem
+ssl_key.pem

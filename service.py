@@ -6,13 +6,43 @@ from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
 from xray import XRayConfig, XRayCore
 
-
+@rpyc.service
 class XrayService(rpyc.Service):
     def __init__(self):
         self.core = None
         self.connection = None
+        self.pinging = False
 
     def on_connect(self, conn):
+        if self.connection and not self.pinging:
+            self.pinging = True
+            connection = self.connection
+            tries = 0
+            while True:
+                tries += 1
+                try:
+                    connection.ping(timeout=3)
+                    self.pinging = False
+                    break
+                except Exception:
+                    if tries <= 3:
+                        continue
+
+                    if connection is self.connection:
+                        logger.warning(f'Previous connection lost, unable to connect to {connection.peer}')
+                        if self.core is not None:
+                            self.core.stop()
+                        self.core = None
+                        self.connection = None
+
+                        try:
+                            connection.close()
+                        except Exception:
+                            pass
+
+                    self.pinging = False
+                    break
+
         if self.connection:
             logger.warning(f'New connection rejected, already connected to {self.connection.peer}')
             return conn.close()
@@ -32,7 +62,8 @@ class XrayService(rpyc.Service):
             self.core = None
             self.connection = None
 
-    def exposed_start(self, config: str):
+    @rpyc.exposed
+    def start(self, config: str):
         if self.core is not None:
             raise RuntimeError("Xray is started already")
 
@@ -68,14 +99,23 @@ class XrayService(rpyc.Service):
             logger.error(exc)
             raise exc
 
-    def exposed_stop(self):
+    @rpyc.exposed
+    def stop(self):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
         self.core.stop()
         self.core = None
 
-    def exposed_restart(self, config: str):
+    @rpyc.exposed
+    def restart(self, config: str):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
         config = XRayConfig(config)
         self.core.restart(config)
+
+    @rpyc.exposed
+    def fetch_xray_version(self):
+        if self.core is None:
+            raise ProcessLookupError("Xray has not been started")
+        
+        return self.core.version

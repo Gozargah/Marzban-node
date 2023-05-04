@@ -1,5 +1,6 @@
 import atexit
 import json
+import re
 import subprocess
 import threading
 
@@ -106,6 +107,7 @@ class XRayCore:
         self.executable_path = executable_path
         self.assets_path = assets_path
         self.started = False
+        self.version = self.get_version()
         self._process = None
         self._on_start_funcs = []
         self._on_stop_funcs = []
@@ -135,6 +137,13 @@ class XRayCore:
                 #     logger.info(output)
 
         threading.Thread(target=reader).start()
+
+    def get_version(self):
+        cmd = [self.executable_path, "version"]
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8')
+        m = re.match(r'^Xray (\d+\.\d+\.\d+)', output)
+        if m:
+            return m.groups()[0]
 
     def start(self, config: XRayConfig):
         if self.started is True:
