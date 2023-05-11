@@ -5,18 +5,14 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 
 RUN apt-get update \
-    && apt-get install -y wget \
+    && apt-get install -y curl unzip \
     && rm -rf /var/lib/apt/lists/*
-RUN wget -O - https://raw.githubusercontent.com/teddysun/across/master/docker/xray/xray.sh | bash \
-    && ln -s /usr/bin/xray /usr/local/bin/xray \
-    && mkdir -p /usr/local/share/xray/ \
-    && wget -O /usr/local/share/xray/geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat \
-    && wget -O /usr/local/share/xray/geoip.dat https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
+RUN bash -c "$(curl -L https://github.com/Gozargah/Marzban-scripts/raw/master/install_latest_xray.sh)" @ v1.8.1
 
 COPY . /code
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-RUN apt-get remove -y wget
+RUN apt-get remove -y curl unzip
 
 CMD ["bash", "-c", "python main.py"]
