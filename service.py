@@ -6,6 +6,7 @@ from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
 from xray import XRayConfig, XRayCore
 
+
 @rpyc.service
 class XrayService(rpyc.Service):
     def __init__(self):
@@ -65,7 +66,7 @@ class XrayService(rpyc.Service):
     @rpyc.exposed
     def start(self, config: str):
         if self.core is not None:
-            raise RuntimeError("Xray is started already")
+            self.stop()
 
         try:
             config = XRayConfig(config)
@@ -101,21 +102,24 @@ class XrayService(rpyc.Service):
 
     @rpyc.exposed
     def stop(self):
-        if self.core is None:
-            raise ProcessLookupError("Xray has not been started")
-        self.core.stop()
+        if self.core:
+            try:
+                self.core.stop()
+            except RuntimeError:
+                pass
         self.core = None
 
     @rpyc.exposed
     def restart(self, config: str):
-        if self.core is None:
-            raise ProcessLookupError("Xray has not been started")
         config = XRayConfig(config)
-        self.core.restart(config)
+        try:
+            self.core.restart(config)
+        except RuntimeError:
+            pass
 
     @rpyc.exposed
     def fetch_xray_version(self):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
-        
+
         return self.core.version
