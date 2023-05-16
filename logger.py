@@ -1,4 +1,5 @@
 import logging
+from config import DEBUG
 
 
 class Colors:
@@ -60,10 +61,10 @@ class LoggerFormatter(logging.Formatter):
 logger = logging.getLogger(__name__)
 
 handler = logging.StreamHandler()
-handler.setLevel(logging.INFO)
+handler.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 handler.setFormatter(LoggerFormatter())
 
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 logger.addHandler(handler)
 
 __all__ = [
