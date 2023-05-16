@@ -252,10 +252,12 @@ class XRayCore:
             return
 
         self.restarting = True
-        logger.warning("Restarting Xray core...")
-        self.stop()
-        self.start(config)
-        self.restarting = False
+        try:
+            logger.warning("Restarting Xray core...")
+            self.stop()
+            self.start(config)
+        finally:
+            self.restarting = False
 
     def on_start(self, func: callable):
         self._on_start_funcs.append(func)

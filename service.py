@@ -112,10 +112,7 @@ class XrayService(rpyc.Service):
     @rpyc.exposed
     def restart(self, config: str):
         config = XRayConfig(config)
-        try:
-            self.core.restart(config)
-        except RuntimeError:
-            pass
+        self.core.restart(config)
 
     @rpyc.exposed
     def fetch_xray_version(self):
