@@ -125,15 +125,6 @@ class XrayService(rpyc.Service):
     def fetch_logs(self):
         if self.core is None:
             raise ProcessLookupError("Xray has not been started")
-        logs_tail = ""
-        log_count = 0
+
         with xray.core.get_logs() as logs:
-            if not logs:
-                return ""
-
-            while log_count < 10:
-                log_count += 1
-                log = logs.popleft()
-                logs_tail += "\n" + log
-
-        return logs_tail
+            return logs
