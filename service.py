@@ -12,41 +12,15 @@ class XrayService(rpyc.Service):
     def __init__(self):
         self.core = None
         self.connection = None
-        self.pinging = False
 
     def on_connect(self, conn):
-        if self.connection and not self.pinging:
-            self.pinging = True
-            connection = self.connection
-            tries = 0
-            while True:
-                tries += 1
-                try:
-                    connection.ping(timeout=3)
-                    self.pinging = False
-                    break
-                except Exception:
-                    if tries <= 3:
-                        continue
-
-                    if connection is self.connection:
-                        logger.warning(f'Previous connection lost, unable to connect to {connection.peer}')
-                        if self.core is not None:
-                            self.core.stop()
-                        self.core = None
-                        self.connection = None
-
-                        try:
-                            connection.close()
-                        except Exception:
-                            pass
-
-                    self.pinging = False
-                    break
-
         if self.connection:
-            logger.warning(f'New connection rejected, already connected to {self.connection.peer}')
-            return conn.close()
+            try:
+                self.connection.ping()
+                logger.warning(f'New connection rejected, already connected to {self.connection.peer}')
+                return conn.close()
+            except (EOFError, TimeoutError):
+                logger.warning(f'Previous connection from {self.connection.peer} has lost')
 
         peer, _ = socket.getpeername(conn._channel.stream.sock)
         self.connection = conn

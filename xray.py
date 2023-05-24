@@ -3,7 +3,6 @@ import json
 import re
 import subprocess
 import threading
-import time
 from collections import deque
 from contextlib import contextmanager
 
@@ -207,29 +206,6 @@ class XRayCore:
         self.process.stdin.close()
 
         self.__capture_process_logs()
-
-        last_log = ''
-        with self.get_logs() as logs:
-            while True:
-                if not logs:
-                    if not self.started:  # to make sure
-                        break
-                    time.sleep(0.05)
-                    continue
-
-                log = logs.popleft()
-                if log:
-                    last_log = log
-
-                if 'core' in log and log.endswith('started'):
-                    logger.warning(f"Xray core {self.version} started")
-                    break
-
-                if not self.started:
-                    break
-
-        if not self.started:
-            raise RuntimeError(last_log)
 
         # execute on start functions
         for func in self._on_start_funcs:
