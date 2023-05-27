@@ -1,10 +1,43 @@
+import time
 from socket import socket
+from threading import Thread
 
 import rpyc
 
 from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
 from xray import XRayConfig, XRayCore
+
+
+class XrayCoreLogsHandler(object):
+    def __init__(self, core: XRayCore, callback: callable, interval: float = 0.6):
+        self.core = core
+        self.callback = callback
+        self.interval = interval
+        self.active = True
+        self.thread = Thread(target=self.cast)
+        self.thread.start()
+
+    def stop(self):
+        self.active = False
+        self.thread.join()
+
+    def cast(self):
+        with self.core.get_logs() as logs:
+            cache = ''
+            last_sent_ts = 0
+            while self.active:
+                if time.time() - last_sent_ts >= self.interval and cache:
+                    self.callback(cache)
+                    cache = ''
+                    last_sent_ts = time.time()
+
+                if not logs:
+                    time.sleep(0.2)
+                    continue
+
+                log = logs.popleft()
+                cache += f'{log}\n'
 
 
 @rpyc.service
@@ -94,3 +127,11 @@ class XrayService(rpyc.Service):
             raise ProcessLookupError("Xray has not been started")
 
         return self.core.version
+
+    @rpyc.exposed
+    def fetch_logs(self, callback: callable) -> XrayCoreLogsHandler:
+        if self.core:
+            logs = XrayCoreLogsHandler(self.core, callback)
+            logs.exposed_stop = logs.stop
+            logs.exposed_cast = logs.cast
+            return logs

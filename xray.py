@@ -167,6 +167,8 @@ class XRayCore:
         try:
             self._temp_log_buffers.append(buf)
             yield buf
+        except (EOFError, TimeoutError):
+            pass
         finally:
             self._temp_log_buffers.remove(buf)
 
