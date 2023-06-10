@@ -1,62 +1,60 @@
 # Marzban Node
 
-Marzban Node is a Python-based application that uses Docker for containerization and GitHub Actions for CI/CD. It leverages the RPyC library for remote procedure calls and Xray for network analysis. The application is designed to be run as a service, with configuration options provided through environment variables.
+Marzban Node is a Python-based application that provides a service for managing an Xray core instance. It uses RPyC for remote procedure calls and Docker for containerization. The application is designed to be secure, using self-signed SSL certificates for communication between the service and its clients.
 
 ## Overview
 
-The application consists of several Python scripts and a Docker configuration:
+The application consists of several Python scripts and configuration files:
 
-- `build.yml`: A GitHub Actions workflow that builds and pushes Docker images to Docker Hub and GitHub Container Registry when a new tag is pushed to the repository.
-- `certificate.py`: Generates a self-signed SSL certificate.
-- `config.py`: Loads environment variables for configuration.
-- `docker-compose.yml`: Defines the Docker service for the application.
-- `logger.py`: Sets up a logger with color-coded output.
-- `main.py`: The entry point for the application. It generates SSL files if they don't exist, sets up an SSL authenticator, and starts the service.
-- `service.py`: Defines the XrayService class, which is exposed over RPyC.
-- `xray.py`: Manages the Xray core, including starting, stopping, and restarting it.
+- `build.yml`: A GitHub Actions workflow file for automating the process of building a Docker image and pushing it to Docker Hub and GitHub Container Registry.
+- `certificate.py`: A Python script for generating a self-signed SSL certificate.
+- `config.py`: A Python script for loading environment variables and providing default values for certain settings.
+- `docker-compose.yml`: A Docker Compose file for defining and managing the application's services.
+- `logger.py`: A Python script for setting up a logger for the application.
+- `main.py`: The main entry point for the application. It sets up an SSL-authenticated RPyC server and starts it.
+- `service.py`: A Python script that defines an RPyC service for managing an Xray core instance.
+- `xray.py`: A Python script that defines a class for managing an Xray core instance.
 
 ## How to Use
 
-### Prerequisites
-
-- Docker
-- Python 3.6 or higher
-- GitHub account (for CI/CD)
-
-### Steps
-
 1. Clone the repository to your local machine.
-2. Set the necessary environment variables in a `.env` file in the root directory of the project. The following variables are used:
 
-```
-SERVICE_PORT=62050
-XRAY_API_PORT=62051
-XRAY_EXECUTABLE_PATH=/usr/local/bin/xray
-XRAY_ASSETS_PATH=/usr/local/share/xray
-SSL_CERT_FILE=/var/lib/marzban-node/ssl_cert.pem
-SSL_KEY_FILE=/var/lib/marzban-node/ssl_key.pem
-DEBUG=False
-```
+2. Install the necessary Python dependencies. These are not explicitly listed in the repository, but based on the import statements in the Python scripts, you will need the following packages:
 
-3. Build the Docker image using the command `docker-compose build`.
-4. Run the Docker container using the command `docker-compose up`.
+   - `rpyc`
+   - `OpenSSL`
+   - `python-decouple`
+   - `python-dotenv`
+   - `logging`
 
-## CI/CD
+   You can install these packages using pip:
 
-The application uses GitHub Actions for CI/CD. When a new tag is pushed to the repository, the `build.yml` workflow is triggered. This workflow builds a new Docker image and pushes it to Docker Hub and GitHub Container Registry.
+   ```
+   pip install rpyc pyOpenSSL python-decouple python-dotenv logging
+   ```
 
-## SSL
+3. Set up your environment variables in a `.env` file in the root directory of the project. The `config.py` script will load these variables when the application starts. The following variables are used:
 
-The application uses SSL for secure communication. The `certificate.py` script generates a self-signed SSL certificate if one does not already exist.
+   - `SERVICE_PORT`: The port that the service will listen on.
+   - `XRAY_API_PORT`: The port that the Xray API will listen on.
+   - `XRAY_EXECUTABLE_PATH`: The path to the Xray executable.
+   - `XRAY_ASSETS_PATH`: The path to the Xray assets.
+   - `SSL_CERT_FILE`: The path to the SSL certificate file.
+   - `SSL_KEY_FILE`: The path to the SSL key file.
+   - `DEBUG`: A boolean indicating whether the application is in debug mode.
 
-## Logging
+4. Build the Docker image using the `docker-compose.yml` file:
 
-The application uses a custom logger defined in `logger.py`. The logger outputs color-coded messages to the console.
+   ```
+   docker-compose up --build
+   ```
 
-## Xray Service
+5. Once the Docker image is built, you can start the application by running the `main.py` script:
 
-The application exposes an XrayService over RPyC. This service allows remote clients to start, stop, and restart the Xray core, as well as fetch the Xray version.
+   ```
+   python main.py
+   ```
 
-## Xray Core
+   This will start the RPyC server and the Xray core instance.
 
-The Xray core is managed by the `xray.py` script. This script starts, stops, and restarts the Xray core, and also provides hooks for functions to be run when the core is started or stopped.
+6. Methods defined in the `service.py` script. These methods allow you to start, stop, and restart the Xray core instance, as well as fetch the Xray version.
