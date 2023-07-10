@@ -80,7 +80,7 @@ class XrayService(rpyc.Service):
             self.core = XRayCore(executable_path=XRAY_EXECUTABLE_PATH,
                                  assets_path=XRAY_ASSETS_PATH)
 
-            if hasattr(self.connection.root, 'on_start'):
+            if self.connection and hasattr(self.connection.root, 'on_start'):
                 @self.core.on_start
                 def on_start():
                     try:
@@ -91,7 +91,7 @@ class XrayService(rpyc.Service):
             else:
                 logger.debug("Peer doesn't have on_start function on it's service, skipped")
 
-            if hasattr(self.connection.root, 'on_stop'):
+            if self.connection and hasattr(self.connection.root, 'on_stop'):
                 @self.core.on_stop
                 def on_stop():
                     try:
