@@ -6,7 +6,8 @@ import threading
 from collections import deque
 from contextlib import contextmanager
 
-from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT
+from node_ip import NodeIP
+from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT, NODE_IP_SAVE_PATH
 from logger import logger
 
 
@@ -30,71 +31,77 @@ class XRayConfig(dict):
         return json.dumps(self, **json_kwargs)
 
     def _apply_api(self):
-        for inbound in self.get('inbounds', []):
-            if inbound.get('protocol') == 'dokodemo-door':
-                self['inbounds'].remove(inbound)
+        node_ip = NodeIP(logger, save_path=NODE_IP_SAVE_PATH).get_node_ip(3)
+        current_node_inbounds = []
 
-        for rule in self.get('routing', {}).get("rules", []):
-            api_tag = self.get('api', {}).get('tag')
-            if api_tag and rule.get('outboundTag') == api_tag:
-                self['routing']['rules'].remove(rule)
+        for inbound in self.get("inbounds", []):
+            if inbound.get("protocol") == "dokodemo-door":
+                self["inbounds"].remove(inbound)
+            if inbound.get("node_ip") is None:
+                pass
+            else:
+                if (
+                    inbound.get("node_ip") == node_ip
+                ):  # if node_ip was matched only these inbounds will be placed in xray inbounds
+                    current_node_inbounds.append(inbound)
+
+        if (
+            len(current_node_inbounds) == 0
+        ):  # if no node_ip was matched or user didn't use the feature, add all inbound like before.
+            current_node_inbounds = self["inbounds"]
+
+        for rule in self.get("routing", {}).get("rules", []):
+            api_tag = self.get("api", {}).get("tag")
+            if api_tag and rule.get("outboundTag") == api_tag:
+                self["routing"]["rules"].remove(rule)
 
         self["api"] = {
             "services": [
                 "HandlerService",
                 "StatsService",
-                "LoggerService"
+                "LoggerService",
             ],
-            "tag": "API"
+            "tag": "API",
         }
         self["stats"] = {}
         self["policy"] = {
             "levels": {
                 "0": {
                     "statsUserUplink": True,
-                    "statsUserDownlink": True
-                }
+                    "statsUserDownlink": True,
+                },
             },
             "system": {
                 "statsInboundDownlink": False,
                 "statsInboundUplink": False,
                 "statsOutboundDownlink": True,
-                "statsOutboundUplink": True
-            }
+                "statsOutboundUplink": True,
+            },
         }
         inbound = {
             "listen": "0.0.0.0",
             "port": self.api_port,
             "protocol": "dokodemo-door",
-            "settings": {
-                "address": "127.0.0.1"
-            },
+            "settings": {"address": "127.0.0.1"},
             "streamSettings": {
                 "security": "tls",
                 "tlsSettings": {
                     "certificates": [
-                        {
-                            "certificateFile": self.ssl_cert,
-                            "keyFile": self.ssl_key
-                        }
+                        {"certificateFile": self.ssl_cert, "keyFile": self.ssl_key}
                     ]
-                }
+                },
             },
-            "tag": "API_INBOUND"
+            "tag": "API_INBOUND",
         }
         try:
-            self["inbounds"].insert(0, inbound)
+            current_node_inbounds.insert(0, inbound)
         except KeyError:
-            self["inbounds"] = []
-            self["inbounds"].insert(0, inbound)
+            current_node_inbounds = []
+            current_node_inbounds.insert(0, inbound)
 
-        rule = {
-            "inboundTag": [
-                "API_INBOUND"
-            ],
-            "outboundTag": "API",
-            "type": "field"
-        }
+        self["inbounds"] = current_node_inbounds
+
+        rule = {"inboundTag": ["API_INBOUND"], "outboundTag": "API", "type": "field"}
         try:
             self["routing"]["rules"].insert(0, rule)
         except KeyError:
@@ -103,9 +110,11 @@ class XRayConfig(dict):
 
 
 class XRayCore:
-    def __init__(self,
-                 executable_path: str = "/usr/bin/xray",
-                 assets_path: str = "/usr/share/xray"):
+    def __init__(
+        self,
+        executable_path: str = "/usr/bin/xray",
+        assets_path: str = "/usr/share/xray",
+    ):
         self.executable_path = executable_path
         self.assets_path = assets_path
 
@@ -117,16 +126,14 @@ class XRayCore:
         self._temp_log_buffers = []
         self._on_start_funcs = []
         self._on_stop_funcs = []
-        self._env = {
-            "XRAY_LOCATION_ASSET": assets_path
-        }
+        self._env = {"XRAY_LOCATION_ASSET": assets_path}
 
         atexit.register(lambda: self.stop() if self.started else None)
 
     def get_version(self):
         cmd = [self.executable_path, "version"]
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8')
-        m = re.match(r'^Xray (\d+\.\d+\.\d+)', output)
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8")
+        m = re.match(r"^Xray (\d+\.\d+\.\d+)", output)
         if m:
             return m.groups()[0]
 
@@ -186,22 +193,17 @@ class XRayCore:
         if self.started is True:
             raise RuntimeError("Xray is started already")
 
-        if config.get('log', {}).get('logLevel') in ('none', 'error'):
-            config['log']['logLevel'] = 'warning'
+        if config.get("log", {}).get("logLevel") in ("none", "error"):
+            config["log"]["logLevel"] = "warning"
 
-        cmd = [
-            self.executable_path,
-            "run",
-            '-config',
-            'stdin:'
-        ]
+        cmd = [self.executable_path, "run", "-config", "stdin:"]
         self.process = subprocess.Popen(
             cmd,
             env=self._env,
             stdin=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True,
         )
         self.process.stdin.write(config.to_json())
         self.process.stdin.flush()

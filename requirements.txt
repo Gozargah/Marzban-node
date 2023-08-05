@@ -6,3 +6,4 @@ pyOpenSSL==23.0.0
 python-decouple==3.7
 python-dotenv==0.21.1
 rpyc==5.3.0
+requests==2.31.0
