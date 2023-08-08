@@ -31,23 +31,29 @@ class XRayConfig(dict):
         return json.dumps(self, **json_kwargs)
 
     def _apply_api(self):
-        node_ip = NodeIP(logger, save_path=NODE_IP_SAVE_PATH).get_node_ip(3)
+        current_node_ip = NodeIP(logger, save_path=NODE_IP_SAVE_PATH).get_node_ip(3)
         current_node_inbounds = []
 
         for inbound in self.get("inbounds", []):
             if inbound.get("protocol") == "dokodemo-door":
                 self["inbounds"].remove(inbound)
-            if inbound.get("node_ip") is None:
-                pass
-            else:
-                if (
-                    inbound.get("node_ip") == node_ip
-                ):  # if node_ip was matched only these inbounds will be placed in xray inbounds
-                    current_node_inbounds.append(inbound)
 
-        if (
-            len(current_node_inbounds) == 0
-        ):  # if no node_ip was matched or user didn't use the feature, add all inbound like before.
+            node_ips_obj = inbound.get("node_ips")
+            if node_ips_obj is None:
+                pass
+            elif type(node_ips_obj) is not list:
+                raise ValueError(
+                    f"'node_ips' Must be a 'list' not {type(node_ips_obj)}!"
+                )
+            else:
+                for received_ip in node_ips_obj:
+                    if received_ip == current_node_ip:
+                        # if received_ip was matched : only these inbounds will be placed in xray inbounds
+                        current_node_inbounds.append(inbound)
+                        break
+
+        if len(current_node_inbounds) == 0:
+            # if no node_ip was matched or admin didn't use the feature : add all inbound like before.
             current_node_inbounds = self["inbounds"]
 
         for rule in self.get("routing", {}).get("rules", []):
@@ -78,7 +84,7 @@ class XRayConfig(dict):
                 "statsOutboundUplink": True,
             },
         }
-        inbound = {
+        api_inbound = {
             "listen": "0.0.0.0",
             "port": self.api_port,
             "protocol": "dokodemo-door",
@@ -94,19 +100,23 @@ class XRayConfig(dict):
             "tag": "API_INBOUND",
         }
         try:
-            current_node_inbounds.insert(0, inbound)
+            current_node_inbounds.insert(0, api_inbound)
         except KeyError:
             current_node_inbounds = []
-            current_node_inbounds.insert(0, inbound)
+            current_node_inbounds.insert(0, api_inbound)
 
         self["inbounds"] = current_node_inbounds
 
-        rule = {"inboundTag": ["API_INBOUND"], "outboundTag": "API", "type": "field"}
+        api_rule = {
+            "inboundTag": ["API_INBOUND"],
+            "outboundTag": "API",
+            "type": "field",
+        }
         try:
-            self["routing"]["rules"].insert(0, rule)
+            self["routing"]["rules"].insert(0, api_rule)
         except KeyError:
             self["routing"] = {"rules": []}
-            self["routing"]["rules"].insert(0, rule)
+            self["routing"]["rules"].insert(0, api_rule)
 
 
 class XRayCore:
