@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from node_ip import NodeIP
 from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT, NODE_IP_SAVE_PATH
 from logger import logger
+from domain_resolver import resolve_domain
 
 
 class XRayConfig(dict):
@@ -46,8 +47,9 @@ class XRayConfig(dict):
                     f"'node_ips' Must be a 'list' not {type(node_ips_obj)}!"
                 )
             else:
-                for received_ip in node_ips_obj:
-                    if received_ip == current_node_ip:
+                for received_ip_or_domain in node_ips_obj:
+                    ip_list = resolve_domain(received_ip_or_domain)
+                    if current_node_ip in ip_list:
                         # if received_ip was matched : only these inbounds will be placed in xray inbounds
                         current_node_inbounds.append(inbound)
                         break
