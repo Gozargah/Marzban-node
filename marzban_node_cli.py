@@ -61,9 +61,9 @@ def modify_dns_settings():
     click.echo("Modifying DNS settings for Iranian server...")
     try:
         # Modify DNS settings
-        subprocess.run(['sudo', 'sed', '-i', '/DNS=/c\DNS=' + DNS_PRIMARY, '/etc/systemd/resolved.conf'])
+        subprocess.run(['sudo', 'sed', '-i', f'/DNS=/c\DNS={DNS_PRIMARY}', '/etc/systemd/resolved.conf'])
         subprocess.run(
-            ['sudo', 'sed', '-i', '/FallbackDNS=/c\FallbackDNS=' + DNS_FALLBACK, '/etc/systemd/resolved.conf'])
+            ['sudo', 'sed', '-i', f'/FallbackDNS=/c\FallbackDNS={DNS_FALLBACK}', '/etc/systemd/resolved.conf'])
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'])  # Reload systemd
         subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'])  # Restart systemd-resolved
         click.echo("DNS settings modified successfully.")
