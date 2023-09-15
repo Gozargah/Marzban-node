@@ -12,13 +12,18 @@ DNS_FALLBACK = "178.22.122.100"
 @click.option('--certificate', is_flag=True, help='Get the certificate key')
 @click.option('--certificate-key', is_flag=True, help='Show the certificate key (implies --certificate)')
 @click.option('--help', is_flag=True, help='Show professional help message')
-def main(dns, certificate, certificate_key, help):
+@click.option('--adjust-dns', is_flag=True, help='Adjust DNS settings only (implies --dns)')
+def main(dns, certificate, certificate_key, help, adjust_dns):
     if help:
         show_help()
         return
 
     if certificate_key:
         get_certificate_key()
+        return
+
+    if adjust_dns:
+        modify_dns_settings()
         return
 
     click.echo("Welcome to the Marzban-node Installation Script")
@@ -29,15 +34,16 @@ def main(dns, certificate, certificate_key, help):
 
     try:
         if dns:
+            install_docker_and_compose()
+            install_git()
+            install_marzban_node()
             modify_dns_settings()
-        install_docker_and_compose()
-        install_git()
-        install_marzban_node()
         if not dns or certificate:
             get_certificate_key()  # Always run get_certificate_key if not DNS or explicitly specified
         click.echo("Installation complete.")
     except KeyboardInterrupt:
         click.echo("\nInstallation aborted.")
+
 
 def show_help():
     # Display help message
@@ -48,23 +54,16 @@ def show_help():
     click.echo("  --dns: Install for Iranian server with DNS modification.")
     click.echo("  --certificate: Get the certificate key.")
     click.echo("  --certificate-key: Show the certificate key (implies --certificate).")
+    click.echo("  --adjust-dns: Adjust DNS settings only (implies --dns).")
     click.echo("  --help: Show the help message.")
 
 def modify_dns_settings():
     click.echo("Modifying DNS settings for Iranian server...")
     try:
         # Modify DNS settings
-        with open('/etc/systemd/resolved.conf', 'r') as f:
-            lines = f.readlines()
-        with open('/etc/systemd/resolved.conf', 'w') as f:
-            for line in lines:
-                if line.startswith('DNS='):
-                    f.write(f'DNS={DNS_PRIMARY}\n')
-                elif line.startswith('FallbackDNS='):
-                    f.write(f'FallbackDNS={DNS_FALLBACK}\n')
-                else:
-                    f.write(line)
-
+        subprocess.run(['sudo', 'sed', '-i', '/DNS=/c\DNS=' + DNS_PRIMARY, '/etc/systemd/resolved.conf'])
+        subprocess.run(
+            ['sudo', 'sed', '-i', '/FallbackDNS=/c\FallbackDNS=' + DNS_FALLBACK, '/etc/systemd/resolved.conf'])
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'])  # Reload systemd
         subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'])  # Restart systemd-resolved
         click.echo("DNS settings modified successfully.")
