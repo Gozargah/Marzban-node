@@ -50,17 +50,18 @@ def show_help():
 def modify_dns_settings():
     click.echo("Modifying DNS settings for Iranian server...")
     try:
-        with open('/etc/systemd/resolved.conf', 'r') as f:
-            lines = f.readlines()
-        with open('/etc/systemd/resolved.conf', 'w') as f:
-            for line in lines:
-                if line.startswith('DNS='):
-                    f.write('DNS=185.51.200.2\n')
-                elif line.startswith('FallbackDNS='):
-                    f.write('FallbackDNS=178.22.122.100\n')
-                else:
-                    f.write(line)
+        # Use sed to modify the DNS settings
+        subprocess.run(['sudo', 'sed', '-i', '/^DNS=/s/^DNS=.*/DNS=185.51.200.2/', '/etc/systemd/resolved.conf'])
+        subprocess.run(['sudo', 'sed', '-i', '/^FallbackDNS=/s/^FallbackDNS=.*/FallbackDNS=178.22.122.100/', '/etc/systemd/resolved.conf'])
+
+        # Remove comments (#) from the lines if they exist
+        subprocess.run(['sudo', 'sed', '-i', '/^#DNS=/s/^#DNS=//', '/etc/systemd/resolved.conf'])
+        subprocess.run(['sudo', 'sed', '-i', '/^#FallbackDNS=/s/^#FallbackDNS=//', '/etc/systemd/resolved.conf'])
+
+        # Enable and restart systemd-resolved
+        subprocess.run(['sudo', 'systemctl', 'enable', 'systemd-resolved'])
         subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'])
+
         click.echo("DNS settings modified successfully.")
         time.sleep(5)  # Sleep for 5 seconds
     except Exception as e:
