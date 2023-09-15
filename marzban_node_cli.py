@@ -37,7 +37,7 @@ def main(dns, certificate, certificate_key, help):
         click.echo("\nInstallation aborted.")
 
 def show_help():
-    # Display professional help message
+    # Display help message
     click.echo("Marzban-node Installation Script")
     click.echo("--------------------------------")
     click.echo("This script assists in installing Marzban-node.")
@@ -45,7 +45,7 @@ def show_help():
     click.echo("  --dns: Install for Iranian server with DNS modification.")
     click.echo("  --certificate: Get the certificate key.")
     click.echo("  --certificate-key: Show the certificate key (implies --certificate).")
-    click.echo("  --help: Show this professional help message.")
+    click.echo("  --help: Show the help message.")
 
 def modify_dns_settings():
     click.echo("Modifying DNS settings for Iranian server...")
