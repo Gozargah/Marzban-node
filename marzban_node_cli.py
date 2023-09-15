@@ -60,12 +60,18 @@ def show_help():
 def modify_dns_settings():
     click.echo("Modifying DNS settings for Iranian server...")
     try:
-        # Modify DNS settings
-        subprocess.run(['sudo', 'sed', '-i', f'/DNS=/c\DNS={DNS_PRIMARY}', '/etc/systemd/resolved.conf'])
-        subprocess.run(
-            ['sudo', 'sed', '-i', f'/FallbackDNS=/c\FallbackDNS={DNS_FALLBACK}', '/etc/systemd/resolved.conf'])
+        # Remove existing DNS and FallbackDNS lines
+        subprocess.run(['sudo', 'sed', '-i', '/^DNS=/d', '/etc/systemd/resolved.conf'])
+        subprocess.run(['sudo', 'sed', '-i', '/^FallbackDNS=/d', '/etc/systemd/resolved.conf'])
+
+        # Add new DNS and FallbackDNS lines
+        subprocess.run(['sudo', 'bash', '-c', f"echo 'DNS={DNS_PRIMARY}' >> /etc/systemd/resolved.conf"])
+        subprocess.run(['sudo', 'bash', '-c', f"echo 'FallbackDNS={DNS_FALLBACK}' >> /etc/systemd/resolved.conf"])
+
+        # Restart systemd-resolved
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'])  # Reload systemd
         subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'])  # Restart systemd-resolved
+
         click.echo("DNS settings modified successfully.")
         time.sleep(5)  # Sleep for 5 seconds
     except Exception as e:
