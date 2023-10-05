@@ -80,7 +80,7 @@ def modify_dns_settings():
 def install_docker_and_compose():
     click.echo("Installing Docker and Docker Compose...")
     try:
-        # Install Docker using provided commands
+        # Install Docker
         subprocess.run(["curl", "-fsSL", "https://get.docker.com", "-o", "get-docker.sh"], check=True)
         subprocess.run(["sh", "get-docker.sh"], check=True)
         subprocess.run(["rm", "get-docker.sh"], check=True)
