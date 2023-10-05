@@ -34,10 +34,10 @@ def main(dns, certificate, certificate_key, help, adjust_dns):
 
     try:
         if dns:
+            modify_dns_settings()
             install_docker_and_compose()
             install_git()
             install_marzban_node()
-            modify_dns_settings()
         if not dns or certificate:
             get_certificate_key()  # Always run get_certificate_key if not DNS or explicitly specified
         click.echo("Installation complete.")
