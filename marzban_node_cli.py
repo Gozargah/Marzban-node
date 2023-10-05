@@ -78,6 +78,24 @@ def modify_dns_settings():
         click.echo(f"Error modifying DNS settings: {str(e)}")
 
 def install_docker_and_compose():
+    def is_docker_installed():
+        try:
+            subprocess.run(["docker", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def is_docker_compose_installed():
+        try:
+            subprocess.run(["docker-compose", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    if is_docker_installed() and is_docker_compose_installed():
+        click.echo("Docker and Docker Compose are already installed. Skipping installation.")
+        return
+
     click.echo("Installing Docker and Docker Compose...")
     try:
         # Install Docker
