@@ -11,7 +11,7 @@ DNS_FALLBACK = "178.22.122.100"
 @click.option('--dns', is_flag=True, help='Install for Iranian server (with DNS modification)')
 @click.option('--certificate', is_flag=True, help='Get the certificate key')
 @click.option('--certificate-key', is_flag=True, help='Show the certificate key (implies --certificate)')
-@click.option('--help', is_flag=True, help='Show professional help message')
+@click.option('--help', is_flag=True, help='Show help message')
 @click.option('--adjust-dns', is_flag=True, help='Adjust DNS settings only (implies --dns)')
 def main(dns, certificate, certificate_key, help, adjust_dns):
     if help:
