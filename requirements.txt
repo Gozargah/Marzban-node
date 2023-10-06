@@ -7,3 +7,5 @@ python-decouple==3.7
 python-dotenv==0.21.1
 rpyc==5.3.0
 click~=8.1.7
+setuptools~=68.2.2
+PyYAML~=6.0.1

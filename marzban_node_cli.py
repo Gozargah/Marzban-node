@@ -3,46 +3,200 @@ import click
 import subprocess
 import os
 import time
+import yaml
 
 # Define DNS settings
 DNS_PRIMARY = "185.51.200.2"
 DNS_FALLBACK = "178.22.122.100"
-@click.command()
-@click.option('--dns', is_flag=True, help='Install for Iranian server (with DNS modification)')
-@click.option('--certificate', is_flag=True, help='Get the certificate key')
-@click.option('--certificate-key', is_flag=True, help='Show the certificate key (implies --certificate)')
-@click.option('--help', is_flag=True, help='Show help message')
-@click.option('--adjust-dns', is_flag=True, help='Adjust DNS settings only (implies --dns)')
-def main(dns, certificate, certificate_key, help, adjust_dns):
-    if help:
-        show_help()
+
+
+@click.group()
+def cli():
+    pass
+
+
+def get_existing_ports(compose_file):
+    existing_ports = set()
+    with open(compose_file, "r") as f:
+        data = yaml.safe_load(f)
+
+    if "services" not in data:
+        return existing_ports
+
+    for service in data["services"].values():
+        if "ports" in service:
+            for port_mapping in service["ports"]:
+                port = int(port_mapping.split(":")[0])
+                existing_ports.add(port)
+
+    return existing_ports
+
+def get_unused_ports(used_ports, existing_ports):
+    while True:
+        try:
+            port = int(input("Enter port: "))
+            api_port = int(input("Enter API port: "))
+            config_port = int(input("Enter config port: "))
+
+            if (
+                port not in used_ports
+                and api_port not in used_ports
+                and config_port not in used_ports
+                and port not in existing_ports
+                and api_port not in existing_ports
+                and config_port not in existing_ports
+            ):
+                used_ports.update([port, api_port, config_port])
+                return port, api_port, config_port
+            else:
+                print("Port(s) already in use or exist in the docker-compose.yml file. Please choose other port numbers.")
+        except ValueError:
+            print("Invalid input. Please enter valid port numbers.")
+
+def edit_docker_compose(directory, used_ports):
+    compose_file = os.path.join(directory, "docker-compose.yml")
+
+    # Check if the docker-compose file exists
+    if not os.path.exists(compose_file):
+        print("docker-compose.yml file not found in Marzban-node directory.")
         return
 
-    if certificate_key:
-        get_certificate_key()
+    existing_ports = get_existing_ports(compose_file)
+
+    with open(compose_file, "r") as f:
+        data = yaml.safe_load(f)
+
+    # Ensure the "version" and "services" keys exist at the top
+    if "version" not in data:
+        data["version"] = "3"  # Set your desired version here
+    if "services" not in data:
+        data["services"] = {}
+
+    # Ask the user if they want to delete and replace the contents
+    replace_contents = input("Do you want to replace the existing contents? (y/n): ").strip().lower()
+    if replace_contents != "y":
         return
 
-    if adjust_dns:
-        modify_dns_settings()
-        return
+    # Determine the container name based on existing services
+    container_number = 1
+    while f"node-{container_number}" in data["services"]:
+        container_number += 1
+    container_name = f"node-{container_number}"
 
-    click.echo("Welcome to the Marzban-node Installation Script")
-    click.echo("----------------------------------------------")
-    click.echo("Script created by dry-stan Nex")
-    click.echo("This script will help you install Marzban-node.")
-    click.echo("Please wait while the installation proceeds...")
+    # Ask for port, api port, and config port
+    port, api_port, config_port = get_unused_ports(used_ports, existing_ports)
 
-    try:
-        if dns:
-            modify_dns_settings()
-            install_docker_and_compose()
-            install_git()
-            install_marzban_node()
-        if not dns or certificate:
-            get_certificate_key()  # Always run get_certificate_key if not DNS or explicitly specified
-        click.echo("Installation complete.")
-    except KeyboardInterrupt:
-        click.echo("\nInstallation aborted.")
+    # Add the new container section with ports
+    data["services"][container_name] = {
+        "image": "gozargah/marzban-node:latest",
+        "restart": "always",
+        "volumes": [
+            "/var/lib/marzban-node:/var/lib/marzban-node"
+        ],
+        "ports": [
+            f"{port}:{port}",
+            f"{api_port}:{api_port}",
+            f"{config_port}:{config_port}"
+        ]
+    }
+
+    # Write the modified data back to the docker-compose file
+    with open(compose_file, "w") as f:
+        yaml.dump(data, f, default_flow_style=False)
+
+    print(f"Container '{container_name}' added to docker-compose.yml")
+
+    # Run docker-compose up -d
+    subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
+
+@cli.command()
+def add_container():
+    marzban_node_dir = find_marzban_node_directory()
+    if marzban_node_dir:
+        used_ports = set()
+        edit_docker_compose(marzban_node_dir, used_ports)
+    else:
+        print("Marzban-node directory not found.")
+
+@cli.command()
+def up():
+    marzban_node_dir = find_marzban_node_directory()
+    if marzban_node_dir:
+        compose_file = os.path.join(marzban_node_dir, "docker-compose.yml")
+        if os.path.exists(compose_file):
+            subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
+            print("Containers started successfully.")
+        else:
+            print("docker-compose.yml file not found in Marzban-node directory.")
+    else:
+        print("Marzban-node directory not found.")
+
+@cli.command()
+def down():
+    marzban_node_dir = find_marzban_node_directory()
+    if marzban_node_dir:
+        compose_file = os.path.join(marzban_node_dir, "docker-compose.yml")
+        if os.path.exists(compose_file):
+            subprocess.run(["docker-compose", "-f", compose_file, "down"], check=True)
+            print("Containers stopped and removed successfully.")
+        else:
+            print("docker-compose.yml file not found in Marzban-node directory.")
+    else:
+        print("Marzban-node directory not found.")
+
+
+@cli.command()
+def update():
+    find_marzban_node_directory()
+    update_marzban_node()
+    get_certificate_key()
+
+
+@cli.command()
+def dns():
+    option = get_dns_configuration_option()
+
+    if option == '1':
+        modify_dns_settings(DNS_PRIMARY, DNS_FALLBACK)
+    elif option == '2':
+        modify_dns_settings("10.202.10.202", "10.202.10.102")
+    elif option == '3':
+        custom_dns_primary = click.prompt("Enter primary DNS server:")
+        custom_dns_secondary = click.prompt("Enter secondary DNS server:")
+        modify_dns_settings(custom_dns_primary, custom_dns_secondary)
+    else:
+        click.echo("Invalid option selected.")
+    is_docker_installed()
+    is_docker_compose_installed()
+    install_docker_and_compose()
+    install_marzban_node()
+    get_certificate_key()
+
+
+@cli.command()
+def certificate():
+    get_certificate_key()
+
+
+@cli.command()
+@click.option('--option', type=click.Choice(['1', '2', '3']), default='1',
+              prompt="Choose DNS configuration option for adjusting DNS settings:\n1. Use recommended DNS servers\n2. Use predefined DNS servers\n3. Enter custom DNS servers")
+def adjust_dns(option):
+    if option == '1':
+        modify_dns_settings(DNS_PRIMARY, DNS_FALLBACK)
+    elif option == '2':
+        modify_dns_settings("10.202.10.202", "10.202.10.102")
+    elif option == '3':
+        custom_dns_primary = click.prompt("Enter primary DNS server:")
+        custom_dns_secondary = click.prompt("Enter secondary DNS server:")
+        modify_dns_settings(custom_dns_primary, custom_dns_secondary)
+    else:
+        click.echo("Invalid option selected.")
+
+
+@cli.command()
+def help():
+    show_help()
 
 
 def show_help():
@@ -50,14 +204,22 @@ def show_help():
     click.echo("Marzban-node Installation Script")
     click.echo("--------------------------------")
     click.echo("This script assists in installing Marzban-node.")
-    click.echo("Options:")
-    click.echo("  --dns: Install for Iranian server with DNS modification.")
-    click.echo("  --certificate: Get the certificate key.")
-    click.echo("  --certificate-key: Show the certificate key (implies --certificate).")
-    click.echo("  --adjust-dns: Adjust DNS settings only (implies --dns).")
-    click.echo("  --help: Show the help message.")
+    click.echo("Commands:")
+    click.echo("  dns: Install for Iranian server with DNS modification.")
+    click.echo("  certificate: Get the certificate key.")
+    click.echo("  update: Update latest version.")
+    click.echo("  adjust-dns: Adjust DNS settings only (implies dns).")
+    click.echo("  help: Show the help message.")
 
-def modify_dns_settings():
+
+def get_dns_configuration_option():
+    option = click.prompt(
+        "Choose DNS configuration option:\n1. Use recommended DNS servers\n2. Use predefined DNS servers\n3. Enter custom DNS servers",
+        type=click.Choice(['1', '2', '3']))
+    return option
+
+
+def modify_dns_settings(primary_dns, fallback_dns):
     click.echo("Modifying DNS settings for Iranian server...")
     try:
         # Remove existing DNS and FallbackDNS lines
@@ -65,8 +227,8 @@ def modify_dns_settings():
         subprocess.run(['sudo', 'sed', '-i', '/^FallbackDNS=/d', '/etc/systemd/resolved.conf'])
 
         # Add new DNS and FallbackDNS lines
-        subprocess.run(['sudo', 'bash', '-c', f"echo 'DNS={DNS_PRIMARY}' >> /etc/systemd/resolved.conf"])
-        subprocess.run(['sudo', 'bash', '-c', f"echo 'FallbackDNS={DNS_FALLBACK}' >> /etc/systemd/resolved.conf"])
+        subprocess.run(['sudo', 'bash', '-c', f"echo 'DNS={primary_dns}' >> /etc/systemd/resolved.conf"])
+        subprocess.run(['sudo', 'bash', '-c', f"echo 'FallbackDNS={fallback_dns}' >> /etc/systemd/resolved.conf"])
 
         # Restart systemd-resolved
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'])  # Reload systemd
@@ -77,40 +239,66 @@ def modify_dns_settings():
     except Exception as e:
         click.echo(f"Error modifying DNS settings: {str(e)}")
 
-def install_docker_and_compose():
-    def is_docker_installed():
-        try:
-            subprocess.run(["docker", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            return True
-        except subprocess.CalledProcessError:
-            return False
 
-    def is_docker_compose_installed():
-        try:
-            subprocess.run(["docker-compose", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-    if is_docker_installed() and is_docker_compose_installed():
-        click.echo("Docker and Docker Compose are already installed. Skipping installation.")
-        return
-
-    click.echo("Installing Docker and Docker Compose...")
+def is_docker_installed():
     try:
-        # Install Docker
-        subprocess.run(["curl", "-fsSL", "https://get.docker.com", "-o", "get-docker.sh"], check=True)
-        subprocess.run(["sh", "get-docker.sh"], check=True)
-        subprocess.run(["rm", "get-docker.sh"], check=True)
+        subprocess.run(["docker", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
-        # Install Docker Compose
-        subprocess.run(['curl', '-L', f"https://github.com/docker/compose/releases/latest/download/docker-compose-{os.uname().sysname.lower()}-{os.uname().machine}", '-o', '/usr/local/bin/docker-compose'])
-        subprocess.run(['chmod', '+x', '/usr/local/bin/docker-compose'])
 
-        click.echo("Docker and Docker Compose installed successfully.")
-        time.sleep(2)  # Sleep for 2 seconds
-    except Exception as e:
-        click.echo(f"Error installing Docker and Docker Compose: {str(e)}")
+if __name__ == "__main__":
+    if is_docker_installed():
+        print("Docker is installed.")
+    else:
+        print("Docker is not installed.")
+
+
+def is_docker_compose_installed():
+    try:
+        subprocess.run(["docker-compose", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+if __name__ == "__main__":
+    if is_docker_compose_installed():
+        print("Docker Compose is installed.")
+    else:
+        print("Docker Compose is not installed.")
+
+
+def install_docker_and_compose():
+    click.echo("Installing Docker and Docker Compose...")
+    if not is_docker_installed():
+        try:
+            # Install Docker
+            subprocess.run(["curl", "-fsSL", "https://get.docker.com", "-o", "get-docker.sh"], check=True)
+            subprocess.run(["sh", "get-docker.sh"], check=True)
+            subprocess.run(["rm", "get-docker.sh"], check=True)
+            click.echo("Docker installed successfully.")
+            time.sleep(2)  # Sleep for 2 seconds
+        except Exception as e:
+            click.echo(f"Error installing Docker: {str(e)}")
+    else:
+        click.echo("Docker is already installed.")
+
+    if not is_docker_compose_installed():
+        try:
+            # Install Docker Compose
+            subprocess.run(['curl', '-L',
+                            f"https://github.com/docker/compose/releases/latest/download/docker-compose-{os.uname().sysname.lower()}-{os.uname().machine}",
+                            '-o', '/usr/local/bin/docker-compose'])
+            subprocess.run(['chmod', '+x', '/usr/local/bin/docker-compose'])
+            click.echo("Docker Compose installed successfully.")
+            time.sleep(2)  # Sleep for 2 seconds
+        except Exception as e:
+            click.echo(f"Error installing Docker Compose: {str(e)}")
+    else:
+        click.echo("Docker Compose is already installed.")
+
 
 def install_git():
     click.echo("Installing git...")
@@ -120,6 +308,7 @@ def install_git():
         time.sleep(1)  # Sleep for 1 second
     except Exception as e:
         click.echo(f"Error installing git: {str(e)}")
+
 
 def install_marzban_node():
     click.echo("Installing Marzban-node...")
@@ -135,6 +324,40 @@ def install_marzban_node():
     except Exception as e:
         click.echo(f"Error installing Marzban-node: {str(e)}")
 
+
+def find_marzban_node_directory():
+    # Check if the "Marzban-node" directory exists in /opt
+    if os.path.exists("/opt/Marzban-node"):
+        return "/opt/Marzban-node"
+
+    # If not found in /opt, search system-wide for the directory
+    for root, dirs, files in os.walk("/"):
+        if "Marzban-node" in dirs:
+            return os.path.join(root, "Marzban-node")
+
+    return None  # Return None if not found anywhere
+
+
+def update_marzban_node():
+    click.echo("Updating Marzban-node...")
+    marzban_node_directory = find_marzban_node_directory()
+
+    if marzban_node_directory:
+        try:
+            os.chdir(marzban_node_directory)
+            subprocess.run(['git', 'pull'])
+            subprocess.run(['docker-compose', 'up', '-d'])
+            click.echo("Marzban-node container is running.")
+            click.echo("Please wait a few moments for it to fully initialize.")
+            click.echo("You can check the status using 'docker-compose ps'.")
+            time.sleep(5)  # Sleep for 5 seconds
+        except Exception as e:
+            click.echo(f"Error updating Marzban-node: {str(e)}")
+    else:
+        click.echo(
+            "Marzban-node directory not found. You may need to clone it first or it's not installed system-wide.")
+
+
 def get_certificate_key():
     click.echo("Getting the certificate key...")
     try:
@@ -145,9 +368,6 @@ def get_certificate_key():
     except Exception as e:
         click.echo(f"Error getting the certificate key: {str(e)}")
 
-if __name__ == "__main__":
-    main()
 
-
-
-
+if __name__ == '__main__':
+    cli()
