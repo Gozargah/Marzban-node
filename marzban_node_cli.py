@@ -15,100 +15,6 @@ def cli():
     pass
 
 
-def get_existing_ports(compose_file):
-    existing_ports = set()
-    with open(compose_file, "r") as f:
-        data = yaml.safe_load(f)
-
-    if "services" not in data:
-        return existing_ports
-
-    for service in data["services"].values():
-        if "ports" in service:
-            for port_mapping in service["ports"]:
-                port = int(port_mapping.split(":")[0])
-                existing_ports.add(port)
-
-    return existing_ports
-
-def get_unused_ports(used_ports, existing_ports):
-    while True:
-        try:
-            port = int(input("Enter port: "))
-            api_port = int(input("Enter API port: "))
-            config_port = int(input("Enter config port: "))
-
-            if (
-                port not in used_ports
-                and api_port not in used_ports
-                and config_port not in used_ports
-                and port not in existing_ports
-                and api_port not in existing_ports
-                and config_port not in existing_ports
-            ):
-                used_ports.update([port, api_port, config_port])
-                return port, api_port, config_port
-            else:
-                print("Port(s) already in use or exist in the docker-compose.yml file. Please choose other port numbers.")
-        except ValueError:
-            print("Invalid input. Please enter valid port numbers.")
-
-def edit_docker_compose(directory, used_ports):
-    compose_file = os.path.join(directory, "docker-compose.yml")
-
-    # Check if the docker-compose file exists
-    if not os.path.exists(compose_file):
-        print("docker-compose.yml file not found in Marzban-node directory.")
-        return
-
-    existing_ports = get_existing_ports(compose_file)
-
-    with open(compose_file, "r") as f:
-        data = yaml.safe_load(f)
-
-    # Ensure the "version" and "services" keys exist at the top
-    if "version" not in data:
-        data["version"] = "3"  # Set your desired version here
-    if "services" not in data:
-        data["services"] = {}
-
-    # Ask the user if they want to delete and replace the contents
-    replace_contents = input("Do you want to replace the existing contents? (y/n): ").strip().lower()
-    if replace_contents != "y":
-        return
-
-    # Determine the container name based on existing services
-    container_number = 1
-    while f"node-{container_number}" in data["services"]:
-        container_number += 1
-    container_name = f"node-{container_number}"
-
-    # Ask for port, api port, and config port
-    port, api_port, config_port = get_unused_ports(used_ports, existing_ports)
-
-    # Add the new container section with ports
-    data["services"][container_name] = {
-        "image": "gozargah/marzban-node:latest",
-        "restart": "always",
-        "volumes": [
-            "/var/lib/marzban-node:/var/lib/marzban-node"
-        ],
-        "ports": [
-            f"{port}:{port}",
-            f"{api_port}:{api_port}",
-            f"{config_port}:{config_port}"
-        ]
-    }
-
-    # Write the modified data back to the docker-compose file
-    with open(compose_file, "w") as f:
-        yaml.dump(data, f, default_flow_style=False)
-
-    print(f"Container '{container_name}' added to docker-compose.yml")
-
-    # Run docker-compose up -d
-    subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
-
 @cli.command()
 def add_container():
     marzban_node_dir = find_marzban_node_directory()
@@ -117,6 +23,7 @@ def add_container():
         edit_docker_compose(marzban_node_dir, used_ports)
     else:
         print("Marzban-node directory not found.")
+
 
 @cli.command()
 def up():
@@ -130,6 +37,7 @@ def up():
             print("docker-compose.yml file not found in Marzban-node directory.")
     else:
         print("Marzban-node directory not found.")
+
 
 @cli.command()
 def down():
@@ -238,6 +146,104 @@ def modify_dns_settings(primary_dns, fallback_dns):
         time.sleep(5)  # Sleep for 5 seconds
     except Exception as e:
         click.echo(f"Error modifying DNS settings: {str(e)}")
+
+
+def get_existing_ports(compose_file):
+    existing_ports = set()
+    with open(compose_file, "r") as f:
+        data = yaml.safe_load(f)
+
+    if "services" not in data:
+        return existing_ports
+
+    for service in data["services"].values():
+        if "ports" in service:
+            for port_mapping in service["ports"]:
+                port = int(port_mapping.split(":")[0])
+                existing_ports.add(port)
+
+    return existing_ports
+
+
+def get_unused_ports(used_ports, existing_ports):
+    while True:
+        try:
+            port = int(input("Enter port: "))
+            api_port = int(input("Enter API port: "))
+            config_port = int(input("Enter config port: "))
+
+            if (
+                    port not in used_ports
+                    and api_port not in used_ports
+                    and config_port not in used_ports
+                    and port not in existing_ports
+                    and api_port not in existing_ports
+                    and config_port not in existing_ports
+            ):
+                used_ports.update([port, api_port, config_port])
+                return port, api_port, config_port
+            else:
+                print(
+                    "Port(s) already in use or exist in the docker-compose.yml file. Please choose other port numbers.")
+        except ValueError:
+            print("Invalid input. Please enter valid port numbers.")
+
+
+def edit_docker_compose(directory, used_ports):
+    compose_file = os.path.join(directory, "docker-compose.yml")
+
+    # Check if the docker-compose file exists
+    if not os.path.exists(compose_file):
+        print("docker-compose.yml file not found in Marzban-node directory.")
+        return
+
+    existing_ports = get_existing_ports(compose_file)
+
+    with open(compose_file, "r") as f:
+        data = yaml.safe_load(f)
+
+    # Ensure the "version" and "services" keys exist at the top
+    if "version" not in data:
+        data["version"] = "3"  # Set your desired version here
+    if "services" not in data:
+        data["services"] = {}
+
+    # Ask the user if they want to delete and replace the contents
+    replace_contents = input("Do you want to replace the existing contents? (y/n): ").strip().lower()
+    if replace_contents != "y":
+        return
+
+    # Determine the container name based on existing services
+    container_number = 1
+    while f"node-{container_number}" in data["services"]:
+        container_number += 1
+    container_name = f"node-{container_number}"
+
+    # Ask for port, api port, and config port
+    port, api_port, config_port = get_unused_ports(used_ports, existing_ports)
+
+    # Add the new container section with ports
+    data["services"][container_name] = {
+        "image": "gozargah/marzban-node:latest",
+        "restart": "always",
+        "volumes": [
+            "/var/lib/marzban-node:/var/lib/marzban-node"
+        ],
+        "ports": [
+            f"{port}:{port}",
+            f"{api_port}:{api_port}",
+            f"{config_port}:{config_port}"
+        ]
+    }
+
+    # Write the modified data back to the docker-compose file
+    with open(compose_file, "w") as f:
+        yaml.dump(data, f, default_flow_style=False)
+
+    print(f"Container '{container_name}' added to docker-compose.yml")
+
+    # Run docker-compose up -d
+    subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
 
 
 def is_docker_installed():

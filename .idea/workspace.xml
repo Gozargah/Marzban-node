@@ -7,7 +7,6 @@
     <list default="true" id="8557e978-5595-4dfc-bbb9-4c77ad32fc0a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/marzban_node_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/marzban_node_cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +93,7 @@
       <workItem from="1694754857999" duration="15201000" />
       <workItem from="1695529456424" duration="23000" />
       <workItem from="1696492123393" duration="4515000" />
-      <workItem from="1696533053807" duration="32067000" />
+      <workItem from="1696533053807" duration="37604000" />
     </task>
     <servers />
   </component>
