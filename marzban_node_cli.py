@@ -74,8 +74,6 @@ def dns():
         modify_dns_settings(custom_dns_primary, custom_dns_secondary)
     else:
         click.echo("Invalid option selected.")
-    is_docker_installed()
-    is_docker_compose_installed()
     install_docker_and_compose()
     install_marzban_node()
     get_certificate_key()
@@ -246,64 +244,32 @@ def edit_docker_compose(directory, used_ports):
     subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
 
 
-def is_docker_installed():
-    try:
-        subprocess.run(["docker", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
-if __name__ == "__main__":
-    if is_docker_installed():
-        print("Docker is installed.")
-    else:
-        print("Docker is not installed.")
-
-
-def is_docker_compose_installed():
-    try:
-        subprocess.run(["docker-compose", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
-if __name__ == "__main__":
-    if is_docker_compose_installed():
-        print("Docker Compose is installed.")
-    else:
-        print("Docker Compose is not installed.")
-
-
 def install_docker_and_compose():
     click.echo("Installing Docker and Docker Compose...")
-    if not is_docker_installed():
-        try:
-            # Install Docker
-            subprocess.run(["curl", "-fsSL", "https://get.docker.com", "-o", "get-docker.sh"], check=True)
-            subprocess.run(["sh", "get-docker.sh"], check=True)
-            subprocess.run(["rm", "get-docker.sh"], check=True)
-            click.echo("Docker installed successfully.")
-            time.sleep(2)  # Sleep for 2 seconds
-        except Exception as e:
-            click.echo(f"Error installing Docker: {str(e)}")
-    else:
-        click.echo("Docker is already installed.")
+    try:
+        # Install Docker
+        subprocess.run(["curl", "-fsSL", "https://get.docker.com", "-o", "get-docker.sh"], check=True)
+        subprocess.run(["sh", "get-docker.sh"], check=True)
+        subprocess.run(["rm", "get-docker.sh"], check=True)
+        click.echo("Docker installed successfully.")
+        time.sleep(2)  # Sleep for 2 seconds
+    except Exception as e:
+        click.echo(f"Error installing Docker: {str(e)}")
 
-    if not is_docker_compose_installed():
-        try:
-            # Install Docker Compose
-            subprocess.run(['curl', '-L',
-                            f"https://github.com/docker/compose/releases/latest/download/docker-compose-{os.uname().sysname.lower()}-{os.uname().machine}",
-                            '-o', '/usr/local/bin/docker-compose'])
-            subprocess.run(['chmod', '+x', '/usr/local/bin/docker-compose'])
-            click.echo("Docker Compose installed successfully.")
-            time.sleep(2)  # Sleep for 2 seconds
-        except Exception as e:
-            click.echo(f"Error installing Docker Compose: {str(e)}")
-    else:
-        click.echo("Docker Compose is already installed.")
+    click.echo("Docker is already installed.")
+
+    try:
+        # Install Docker Compose
+        subprocess.run(['curl', '-L',
+                        f"https://github.com/docker/compose/releases/latest/download/docker-compose-{os.uname().sysname.lower()}-{os.uname().machine}",
+                        '-o', '/usr/local/bin/docker-compose'])
+        subprocess.run(['chmod', '+x', '/usr/local/bin/docker-compose'])
+        click.echo("Docker Compose installed successfully.")
+        time.sleep(2)  # Sleep for 2 seconds
+    except Exception as e:
+        click.echo(f"Error installing Docker Compose: {str(e)}")
+
+    click.echo("Docker Compose is already installed.")
 
 
 def install_git():

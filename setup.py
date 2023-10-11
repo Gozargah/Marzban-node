@@ -9,7 +9,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        marzban-node=marzban_node_cli:main
+        marzban-node=marzban_node_cli:cli
     ''',
 )
 

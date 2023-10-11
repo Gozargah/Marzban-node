@@ -19,7 +19,6 @@ python3 setup.py sdist
 
 # Step 5: Install the CLI Tool from the source distribution
 echo "Step 5: Installing the CLI Tool from the source distribution..."
-pip3 install .
 sleep 2
 clear
 echo "Setup completed successfully!"
