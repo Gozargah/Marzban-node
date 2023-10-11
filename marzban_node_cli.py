@@ -228,8 +228,8 @@ def edit_docker_compose(directory, used_ports):
             "/var/lib/marzban-node:/var/lib/marzban-node"
         ],
         "ports": [
-            f"{port}:{port}",
-            f"{api_port}:{api_port}",
+            f"{port}:62050",
+            f"{api_port}:62051",
             f"{config_port}:{config_port}"
         ]
     }
