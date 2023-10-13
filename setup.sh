@@ -5,6 +5,7 @@ echo "Step 1: Updating the system..."
 sudo apt update
 sudo apt upgrade -y
 sudo apt install python3-pip -y
+sudo apt install git -y
 # Step 2: Clone the GitHub repository to /var/opt
 echo "Step 2: Cloning the GitHub repository to /var/opt..."
 cd /var/opt
@@ -74,7 +75,7 @@ else
 fi
 
 # Source the .bashrc file
-source "$shell_rc_file"
+source ~./bashrc
 
 # Clean up
 sleep 2
