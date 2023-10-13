@@ -5,8 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8557e978-5595-4dfc-bbb9-4c77ad32fc0a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docker_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/marzban_node_cli.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/marzban_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/network_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/port_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/setup.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/marzban_node_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/marzban_node_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/docker_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/marzban_node_cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/marzban_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/network_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/port_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/setup.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,12 +49,16 @@
   &quot;associatedIndex&quot;: 7
 }</component>
   <component name="ProjectId" id="2VQ4E2p5IbrmEafNpE9UV7Oa6TT" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
@@ -93,12 +113,15 @@
       <workItem from="1694754857999" duration="15201000" />
       <workItem from="1695529456424" duration="23000" />
       <workItem from="1696492123393" duration="4515000" />
-      <workItem from="1696533053807" duration="59952000" />
+      <workItem from="1696533053807" duration="60756000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Marzban_node$marzban_node_cli.coverage" NAME="marzban_node_cli Coverage Results" MODIFIED="1694756592636" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/marzban-node-cli" />
