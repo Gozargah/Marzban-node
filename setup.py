@@ -1,16 +1,14 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='marzban-node-cli',
-    version='0.1',
-    py_modules=['marzban_node_cli'],
-    install_requires=[
-        'Click',
-    ],
-    entry_points='''
-        [console_scripts]
-        marzban-node=marzban_node_cli:cli
-    ''',
+    name='marzban-node',
+    version='1.0.0',
+    packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'marzban-node = marzban_node_cli:cli',
+        ],
+    },
 )
 
 
