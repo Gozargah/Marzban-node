@@ -120,15 +120,30 @@ def help():
 
 def show_help():
     # Display help message
-    click.echo("Marzban-node Installation Script")
-    click.echo("--------------------------------")
+    click.secho("Marzban-node Installation Script", fg="blue", bold=True)
+    click.echo("------------------------------------------------")
     click.echo("This script assists in installing Marzban-node.")
-    click.echo("Commands:")
-    click.echo("  dns: Install for Iranian server with DNS modification.")
-    click.echo("  certificate: Get the certificate key.")
-    click.echo("  update: Update latest version.")
-    click.echo("  adjust-dns: Adjust DNS settings only (implies dns).")
-    click.echo("  help: Show the help message.")
+    click.echo("Available Commands:")
+    click.secho("  install", fg="green", bold=True)
+    click.echo("    - Install Docker and Marzban-node.")
+    click.secho("  add-container", fg="green", bold=True)
+    click.echo("    - Add a new container to the Marzban-node setup.")
+    click.secho("  up", fg="green", bold=True)
+    click.echo("    - Start the Marzban-node containers.")
+    click.secho("  down", fg="green", bold=True)
+    click.echo("    - Stop and remove Marzban-node containers.")
+    click.secho("  update", fg="green", bold=True)
+    click.echo("    - Update Marzban-node to the latest version.")
+    click.secho("  dns", fg="green", bold=True)
+    click.echo("    - Install marzban-node for Iranian servers with dns modification.")
+    click.secho("  certificate", fg="green", bold=True)
+    click.echo("    - Get the SSL certificate key.")
+    click.secho("  adjust-dns", fg="green", bold=True)
+    click.echo("    - Adjust DNS settings only (implies dns).")
+    click.secho("  tor", fg="green", bold=True)
+    click.echo("    - Install Docker with Tor and Marzban-node.")
+    click.secho("  help", fg="green", bold=True)
+    click.echo("    - Show this help message.")
 
 
 def get_dns_configuration_option():
