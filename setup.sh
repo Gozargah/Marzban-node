@@ -46,6 +46,37 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Configuration
+completion_script_name="marzban-node-completion.sh"
+shell_rc_file="$HOME/.bashrc" # Adjust to match the user's shell configuration file
+
+# Function to add completion script to the shell configuration
+add_completion_to_shell() {
+    if [[ -f "$shell_rc_file" ]]; then
+        if grep -q "source $completion_script_name" "$shell_rc_file"; then
+            echo "Auto-completion is already configured in $shell_rc_file."
+        else
+            echo "Adding auto-completion configuration to $shell_rc_file..."
+            echo "source $completion_script_name" >> "$shell_rc_file"
+            echo "Auto-completion configuration added to $shell_rc_file. Please restart your shell to apply the changes."
+        fi
+    else
+        echo "Shell configuration file ($shell_rc_file) not found. Please configure auto-completion manually."
+    fi
+}
+
+# Auto-completion script setup
+if [[ -f "$completion_script_name" ]]; then
+    echo "Auto-completion script found: $completion_script_name"
+    echo "Copying it to the appropriate location..."
+    cp "$completion_script_name" "/etc/bash_completion.d/$completion_script_name"
+    echo "Completion script copied to /etc/bash_completion.d/"
+
+    add_completion_to_shell
+else
+    echo "Auto-completion script ($completion_script_name) not found. Please create the completion script manually."
+fi
+
 # Clean up
 sleep 2
 clear
