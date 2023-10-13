@@ -16,6 +16,11 @@ def cli():
 
 
 @cli.command()
+def install():
+    install_docker_and_compose()
+    install_marzban_node()
+
+@cli.command()
 def add_container():
     marzban_node_dir = find_marzban_node_directory()
     if marzban_node_dir:
