@@ -72,7 +72,7 @@ if [[ -f "$completion_script_path" ]]; then
 else
     echo "Auto-completion script ($completion_script_path) not found. Please create the completion script manually."
 fi
-
+source ~/.bashrc
 # Clean up
 sleep 2
 clear
