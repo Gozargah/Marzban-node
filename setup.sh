@@ -55,6 +55,10 @@ for extension in "${PYTHONPATH_EXTENSIONS[@]}"; do
 done
 
 sleep 2
+# Re-set PYTHONPATH to the Marzban-node directory
+for extension in "${PYTHONPATH_EXTENSIONS[@]}"; do
+  export PYTHONPATH="$marzban_node_dir/$extension:$PYTHONPATH"
+done
 clear
 echo "Setup completed successfully!"
 
