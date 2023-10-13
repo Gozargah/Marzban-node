@@ -8,7 +8,7 @@ The script provides several command-line commands to perform various tasks relat
 Execute the Installation Script:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/dry-stan/Marzban-node/master/setup.sh && source ~./bashrc)
+bash <(curl -Ls https://raw.githubusercontent.com/dry-stan/Marzban-node/master/setup.sh) && source ~/.bashrc
 ```
 To see the help message of the Marzban-node script, run the following command:
 ```bash
