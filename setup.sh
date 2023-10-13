@@ -24,24 +24,20 @@ if [ -z "$marzban_node_dir" ]; then
   exit 1
 fi
 
-# Step 3: Download pip for Python 3
-echo "Step 3: Downloading and installing pip for Python 3..."
-sudo apt install python3-pip -y
+# Change to the Marzban-node/cli directory
+echo "Step 3: Changing to the Marzban-node/cli directory..."
+cd "$marzban_node_dir/cli"
 
-# Change to the Marzban-node directory
-echo "Step 4: Changing to the Marzban-node directory..."
-cd "$marzban_node_dir"
-
-# Step 5: Install dependencies from requirements.txt
-echo "Step 5: Installing dependencies from requirements.txt..."
+# Step 4: Install dependencies from requirements.txt
+echo "Step 4: Installing dependencies from requirements.txt..."
 pip3 install -r requirements.txt
 
-# Step 6: Create a source distribution package
-echo "Step 6: Creating a source distribution package..."
+# Step 5: Create a source distribution package
+echo "Step 5: Creating a source distribution package..."
 python3 setup.py sdist
 
-# Step 7: Install the CLI Tool from the source distribution
-echo "Step 7: Installing the CLI Tool from the source distribution..."
+# Step 6: Install the CLI Tool from the source distribution
+echo "Step 6: Installing the CLI Tool from the source distribution..."
 pip3 install .
 
 # Check if the installation was successful
