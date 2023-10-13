@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'marzban-node = marzban-node.marzban_node_cli:cli',
+            'marzban-node = marzban_node_cli:cli',
         ],
     },
 )
