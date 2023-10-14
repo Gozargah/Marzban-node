@@ -29,6 +29,24 @@ def add_container():
     else:
         print("Marzban-node directory not found.")
 
+@cli.command()
+def restart():
+    marzban_node_dir = find_marzban_node_directory()
+    if marzban_node_dir:
+        compose_file = os.path.join(marzban_node_dir, "docker-compose.yml")
+        if os.path.exists(compose_file):
+            # Stop and remove containers
+            subprocess.run(["docker-compose", "-f", compose_file, "down"], check=True)
+            print("Containers stopped and removed successfully.")
+
+            # Start containers
+            subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"], check=True)
+            print("Containers started successfully.")
+        else:
+            print("docker-compose.yml file not found in Marzban-node directory.")
+    else:
+        print("Marzban-node directory not found.")
+
 
 @cli.command()
 def up():
@@ -128,6 +146,8 @@ def show_help():
     click.echo("    - Install Docker and Marzban-node.")
     click.secho("  add-container", fg="green", bold=True)
     click.echo("    - Add a new container to the Marzban-node setup.")
+    click.secho("  restart", fg="green", bold=True)
+    click.echo("    - Restart the Marzban-node containers.")
     click.secho("  up", fg="green", bold=True)
     click.echo("    - Start the Marzban-node containers.")
     click.secho("  down", fg="green", bold=True)
