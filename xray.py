@@ -16,12 +16,13 @@ class XRayConfig(dict):
     config must contain an inbound with the API_INBOUND tag name which handles API requests
     """
 
-    def __init__(self, config: str):
+    def __init__(self, config: str, peer_ip: str):
         config = json.loads(config)
 
         self.api_port = XRAY_API_PORT
         self.ssl_cert = SSL_CERT_FILE
         self.ssl_key = SSL_KEY_FILE
+        self.peer_ip = peer_ip
 
         super().__init__(config)
         self._apply_api()
@@ -91,6 +92,10 @@ class XRayConfig(dict):
         rule = {
             "inboundTag": [
                 "API_INBOUND"
+            ],
+            "source": [
+                "127.0.0.1",
+                self.peer_ip
             ],
             "outboundTag": "API",
             "type": "field"

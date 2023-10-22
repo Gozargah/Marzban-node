@@ -76,7 +76,7 @@ class XrayService(rpyc.Service):
             self.stop()
 
         try:
-            config = XRayConfig(config)
+            config = XRayConfig(config, self.connection.peer)
             self.core = XRayCore(executable_path=XRAY_EXECUTABLE_PATH,
                                  assets_path=XRAY_ASSETS_PATH)
 
@@ -118,7 +118,7 @@ class XrayService(rpyc.Service):
 
     @rpyc.exposed
     def restart(self, config: str):
-        config = XRayConfig(config)
+        config = XRayConfig(config, self.connection.peer)
         self.core.restart(config)
 
     @rpyc.exposed
