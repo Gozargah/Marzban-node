@@ -24,13 +24,17 @@ if __name__ == "__main__":
                 os.path.isfile(SSL_KEY_FILE))):
         generate_ssl_files()
 
-    if not os.path.isfile(SSL_CLIENT_CERT_FILE):
+    if not SSL_CLIENT_CERT_FILE:
+        logger.warning(
+            "You are running node without SSL_CLIENT_CERT_FILE, be aware that everyone can connect to this node and this isn't secure!")
+
+    if SSL_CLIENT_CERT_FILE and not os.path.isfile(SSL_CLIENT_CERT_FILE):
         logger.error("Client's certificate file specified on SSL_CLIENT_CERT_FILE is missing")
         exit(0)
 
     authenticator = SSLAuthenticator(keyfile=SSL_KEY_FILE,
                                      certfile=SSL_CERT_FILE,
-                                     ca_certs=SSL_CLIENT_CERT_FILE)
+                                     ca_certs=SSL_CLIENT_CERT_FILE or None)
     thread = ThreadedServer(XrayService(),
                             port=SERVICE_PORT,
                             authenticator=authenticator)

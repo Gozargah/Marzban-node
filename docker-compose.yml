@@ -5,5 +5,10 @@ services:
     restart: always
     network_mode: host
 
+    environment:
+      SSL_CERT_FILE: "/var/lib/marzban-node/ssl_cert.pem"
+      SSL_KEY_FILE: "/var/lib/marzban-node/ssl_key.pem"
+      # SSL_CLIENT_CERT_FILE: "/var/lib/marzban-node/ssl_client_cert.pem"
+
     volumes:
       - /var/lib/marzban-node:/var/lib/marzban-node

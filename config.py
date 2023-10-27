@@ -12,6 +12,6 @@ XRAY_ASSETS_PATH = config("XRAY_ASSETS_PATH", default="/usr/local/share/xray")
 
 SSL_CERT_FILE = config("SSL_CERT_FILE", default="/var/lib/marzban-node/ssl_cert.pem")
 SSL_KEY_FILE = config("SSL_KEY_FILE", default="/var/lib/marzban-node/ssl_key.pem")
-SSL_CLIENT_CERT_FILE = config("SSL_CLIENT_CERT_FILE", default="/var/lib/marzban-node/ssl_client_cert.pem")
+SSL_CLIENT_CERT_FILE = config("SSL_CLIENT_CERT_FILE", default="")
 
 DEBUG = config("DEBUG", cast=bool, default=False)
