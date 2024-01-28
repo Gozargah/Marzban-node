@@ -50,8 +50,9 @@ class XrayService(rpyc.Service):
         if self.connection:
             try:
                 self.connection.ping()
-                logger.warning(
-                    f'New connection rejected, already connected to {self.connection.peer}')
+                if self.connection.peer is not None:
+                    logger.warning(
+                        f'New connection rejected, already connected to {self.connection.peer}')
                 return conn.close()
             except (EOFError, TimeoutError, AttributeError):
                 if hasattr(self.connection, "peer"):
