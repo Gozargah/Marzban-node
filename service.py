@@ -50,10 +50,14 @@ class XrayService(rpyc.Service):
         if self.connection:
             try:
                 self.connection.ping()
-                logger.warning(f'New connection rejected, already connected to {self.connection.peer}')
+                if self.connection.peer is not None:
+                    logger.warning(
+                        f'New connection rejected, already connected to {self.connection.peer}')
                 return conn.close()
-            except (EOFError, TimeoutError):
-                logger.warning(f'Previous connection from {self.connection.peer} has lost')
+            except (EOFError, TimeoutError, AttributeError):
+                if hasattr(self.connection, "peer"):
+                    logger.warning(
+                        f'Previous connection from {self.connection.peer} has lost')
 
         peer, _ = socket.getpeername(conn._channel.stream.sock)
         self.connection = conn
@@ -89,7 +93,8 @@ class XrayService(rpyc.Service):
                     except Exception as exc:
                         logger.debug('Peer on_start exception:', exc)
             else:
-                logger.debug("Peer doesn't have on_start function on it's service, skipped")
+                logger.debug(
+                    "Peer doesn't have on_start function on it's service, skipped")
 
             if self.connection and hasattr(self.connection.root, 'on_stop'):
                 @self.core.on_stop
@@ -100,7 +105,8 @@ class XrayService(rpyc.Service):
                     except Exception as exc:
                         logger.debug('Peer on_stop exception:', exc)
             else:
-                logger.debug("Peer doesn't have on_stop function on it's service, skipped")
+                logger.debug(
+                    "Peer doesn't have on_stop function on it's service, skipped")
 
             self.core.start(config)
         except Exception as exc:
