@@ -15,3 +15,5 @@ SSL_KEY_FILE = config("SSL_KEY_FILE", default="/var/lib/marzban-node/ssl_key.pem
 SSL_CLIENT_CERT_FILE = config("SSL_CLIENT_CERT_FILE", default="")
 
 DEBUG = config("DEBUG", cast=bool, default=False)
+
+SERVICE_PROTOCOL = config('SERVICE_PROTOCOL', cast=str, default='rpyc')

@@ -1,4 +1,7 @@
 import logging
+
+from uvicorn.config import LOGGING_CONFIG as UVICORN_LOGGING_CONFIG
+
 from config import DEBUG
 
 
@@ -59,10 +62,16 @@ class LoggerFormatter(logging.Formatter):
 
 
 logger = logging.getLogger(__name__)
+formatter = LoggerFormatter()
 
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG if DEBUG else logging.INFO)
-handler.setFormatter(LoggerFormatter())
+handler.setFormatter(formatter)
+
+UVICORN_LOGGING_CONFIG['formatters']['default'] = {
+    '()': LoggerFormatter,
+    'fmt': '%(levelprefix)s %(message)s'
+}
 
 logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 logger.addHandler(handler)
