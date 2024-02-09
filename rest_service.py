@@ -9,10 +9,14 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
+from apscheduler.schedulers.background import BackgroundScheduler
+
+scheduler = BackgroundScheduler({'apscheduler.job_defaults.max_instances': 5}, timezone='UTC')
 
 from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
 from xray import XRayConfig, XRayCore
+from system import NodeStats, memory_usage, cpu_usage, realtime_bandwidth
 
 app = FastAPI()
 
@@ -49,6 +53,7 @@ class Service(object):
         self.router.add_api_route("/start", self.start, methods=["POST"])
         self.router.add_api_route("/stop", self.stop, methods=["POST"])
         self.router.add_api_route("/restart", self.restart, methods=["POST"])
+        self.router.add_api_route("/stats", self.get_node_stats, methods=["POST"])
 
         self.router.add_websocket_route("/logs", self.logs)
 
@@ -268,6 +273,27 @@ class Service(object):
 
         await websocket.close()
 
+    def get_node_stats(self, session_id: UUID = Body(embed=True)):
+        self.match_session_id(session_id)
+
+        mem = memory_usage()
+        cpu = cpu_usage()
+        realtime_bandwidth_stats = realtime_bandwidth()
+
+        return NodeStats(
+            mem_total=mem.total,
+            mem_used=mem.used,
+            cpu_cores=cpu.cores,
+            cpu_usage=cpu.percent,
+            incoming_bandwidth_speed=realtime_bandwidth_stats.incoming_bytes,
+            outgoing_bandwidth_speed=realtime_bandwidth_stats.outgoing_bytes,
+        )
+
 
 service = Service()
 app.include_router(service.router)
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    scheduler.shutdown()
