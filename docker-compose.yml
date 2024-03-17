@@ -4,6 +4,6 @@ services:
     image: gozargah/marzban-node:latest
     restart: always
     network_mode: host
-	env_file: .env
+    env_file: .env
     volumes:
       - /var/lib/marzban-node:/var/lib/marzban-node
