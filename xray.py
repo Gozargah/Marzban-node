@@ -49,20 +49,6 @@ class XRayConfig(dict):
             "tag": "API"
         }
         self["stats"] = {}
-        self["policy"] = {
-            "levels": {
-                "0": {
-                    "statsUserUplink": True,
-                    "statsUserDownlink": True
-                }
-            },
-            "system": {
-                "statsInboundDownlink": False,
-                "statsInboundUplink": False,
-                "statsOutboundDownlink": True,
-                "statsOutboundUplink": True
-            }
-        }
         inbound = {
             "listen": "0.0.0.0",
             "port": self.api_port,
