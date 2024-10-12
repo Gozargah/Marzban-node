@@ -7,8 +7,8 @@ from rpyc.utils.server import ThreadedServer
 import rest_service
 import rpyc_service
 from certificate import generate_certificate
-from config import (SERVICE_PORT, SERVICE_PROTOCOL, SSL_CERT_FILE,
-                    SSL_CLIENT_CERT_FILE, SSL_KEY_FILE, SERVICE_HOST)
+from config import (SERVICE_HOST, SERVICE_PORT, SERVICE_PROTOCOL,
+                    SSL_CERT_FILE, SSL_KEY_FILE, SSL_CLIENT_CERT_FILE)
 from logger import logger
 
 
