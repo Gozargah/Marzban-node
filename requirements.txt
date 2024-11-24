@@ -5,7 +5,7 @@ click==8.1.7
 cryptography==43.0.1
 fastapi==0.115.2
 h11==0.14.0
-idna==3.6
+idna==3.7
 plumbum==1.8.1
 pycparser==2.21
 pydantic==2.6.1
