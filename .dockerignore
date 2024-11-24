@@ -1,0 +1,15 @@
+**/node_modules
+*.log
+*.md
+*.pyc
+*.pyd
+*.pyo
+.docker*
+.env*
+.git*
+.idea
+.venv
+.vscode
+Dockerfile*
+__pycache__
+docker-compose*.yml
