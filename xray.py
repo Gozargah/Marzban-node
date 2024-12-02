@@ -6,7 +6,7 @@ import threading
 from collections import deque
 from contextlib import contextmanager
 
-from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_PORT
+from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_HOST, XRAY_API_PORT
 from logger import logger
 
 
@@ -19,6 +19,7 @@ class XRayConfig(dict):
     def __init__(self, config: str, peer_ip: str):
         config = json.loads(config)
 
+        self.api_host = XRAY_API_HOST
         self.api_port = XRAY_API_PORT
         self.ssl_cert = SSL_CERT_FILE
         self.ssl_key = SSL_KEY_FILE
@@ -50,7 +51,7 @@ class XRayConfig(dict):
         }
         self["stats"] = {}
         inbound = {
-            "listen": "0.0.0.0",
+            "listen": self.api_host,
             "port": self.api_port,
             "protocol": "dokodemo-door",
             "settings": {
