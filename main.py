@@ -7,8 +7,8 @@ from rpyc.utils.server import ThreadedServer
 import rest_service
 import rpyc_service
 from certificate import generate_certificate
-from config import (SERVICE_PORT, SERVICE_PROTOCOL, SSL_CERT_FILE,
-                    SSL_CLIENT_CERT_FILE, SSL_KEY_FILE)
+from config import (SERVICE_HOST, SERVICE_PORT, SERVICE_PROTOCOL,
+                    SSL_CERT_FILE, SSL_KEY_FILE, SSL_CLIENT_CERT_FILE)
 from logger import logger
 
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         logger.info(f"Node service running on :{SERVICE_PORT}")
         uvicorn.run(
             rest_service.app,
-            host="0.0.0.0",
+            host=SERVICE_HOST,
             port=SERVICE_PORT,
             ssl_keyfile=SSL_KEY_FILE,
             ssl_certfile=SSL_CERT_FILE,
