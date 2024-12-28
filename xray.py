@@ -33,7 +33,7 @@ class XRayConfig(dict):
 
     def _apply_api(self):
         for inbound in self.get('inbounds', []):
-            if inbound.get('protocol') == 'dokodemo-door':
+            if inbound.get('protocol') == 'dokodemo-door' and inbound.get('tag') == 'API_INBOUND':
                 self['inbounds'].remove(inbound)
 
         for rule in self.get('routing', {}).get("rules", []):
@@ -117,7 +117,8 @@ class XRayCore:
 
     def get_version(self):
         cmd = [self.executable_path, "version"]
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8')
+        output = subprocess.check_output(
+            cmd, stderr=subprocess.STDOUT).decode('utf-8')
         m = re.match(r'^Xray (\d+\.\d+\.\d+)', output)
         if m:
             return m.groups()[0]
