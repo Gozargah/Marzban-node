@@ -6,7 +6,7 @@ import threading
 from collections import deque
 from contextlib import contextmanager
 
-from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_HOST, XRAY_API_PORT
+from config import DEBUG, SSL_CERT_FILE, SSL_KEY_FILE, XRAY_API_HOST, XRAY_API_PORT, INBOUNDS
 from logger import logger
 
 
@@ -32,8 +32,11 @@ class XRayConfig(dict):
         return json.dumps(self, **json_kwargs)
 
     def _apply_api(self):
-        for inbound in self.get('inbounds', []):
+        for inbound in self.get('inbounds', []).copy():
             if inbound.get('protocol') == 'dokodemo-door' and inbound.get('tag') == 'API_INBOUND':
+                self['inbounds'].remove(inbound)
+                
+            elif INBOUNDS and inbound.get('tag') not in INBOUNDS:
                 self['inbounds'].remove(inbound)
 
         for rule in self.get('routing', {}).get("rules", []):
