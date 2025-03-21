@@ -19,4 +19,4 @@ DEBUG = config("DEBUG", cast=bool, default=False)
 
 SERVICE_PROTOCOL = config('SERVICE_PROTOCOL', cast=str, default='rest')
 
-INBOUNDS = config("INBOUNDS", cast=lambda v: [x.strip() for x in v.split(',')], default="")
+INBOUNDS = config("INBOUNDS", cast=lambda v: [x.strip() for x in v.split(',')] if v else [], default="")
