@@ -347,17 +347,17 @@ add_panel_host() {
         -H "Authorization: Bearer ${access_token}" \
         --connect-timeout 10 --max-time 15 2>/dev/null || echo "{}")
 
-    # Build the new host entry for HYSTERIA2 tag
+    # Build the new host entry for HYSTERIA2 tag (Python reads ALLOW_INSECURE from env to avoid true/True shell→Python issues)
+    export ALLOW_INSECURE
     local new_host
-    local allow_insecure_py
-    allow_insecure_py=$( $ALLOW_INSECURE && echo 'True' || echo 'False' )
-
     new_host=$(python3 - << PYEOF
-import json, sys
+import json, sys, os
 
 current = json.loads('''${current_hosts}''')
 tag = "HYSTERIA2"
 hosts = current.get(tag, [])
+
+allow_insecure = str(os.environ.get("ALLOW_INSECURE", "true")).lower() in ("1", "true", "yes")
 
 new_entry = {
     "remark": "${remark} - HY2",
@@ -369,7 +369,7 @@ new_entry = {
     "security": "inbound_default",
     "alpn": "",
     "fingerprint": "",
-    "allowinsecure": ${allow_insecure_py},
+    "allowinsecure": allow_insecure,
     "is_disabled": False,
     "mux_enable": False,
     "fragment_setting": None,
