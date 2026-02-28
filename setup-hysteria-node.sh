@@ -108,7 +108,7 @@ generate_secret() {
 
 json_value() {
     # minimal jq substitute: json_value '{"key":"val"}' key
-    echo "$1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$2',''))" 2>/dev/null || true
+    printf '%s' "$1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$2',''))" 2>/dev/null || true
 }
 
 # ── banner ────────────────────────────────────────────────────────────────────
@@ -327,8 +327,8 @@ add_panel_host() {
     log "Authenticating with Marzban panel..."
     local token_resp
     token_resp=$(curl -s -k -X POST "${HYSTERIA2_MARZBAN_URL}/api/admin/token" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "username=${PANEL_ADMIN_USER}&password=${PANEL_ADMIN_PASS}" \
+        --data-urlencode "username=${PANEL_ADMIN_USER}" \
+        --data-urlencode "password=${PANEL_ADMIN_PASS}" \
         --connect-timeout 10 --max-time 15 2>/dev/null || echo "")
 
     local access_token
@@ -349,6 +349,9 @@ add_panel_host() {
 
     # Build the new host entry for HYSTERIA2 tag
     local new_host
+    local allow_insecure_py
+    allow_insecure_py=$( $ALLOW_INSECURE && echo 'True' || echo 'False' )
+
     new_host=$(python3 - << PYEOF
 import json, sys
 
@@ -366,7 +369,7 @@ new_entry = {
     "security": "inbound_default",
     "alpn": "",
     "fingerprint": "",
-    "allowinsecure": $( $ALLOW_INSECURE && echo 'true' || echo 'false' ),
+    "allowinsecure": ${allow_insecure_py},
     "is_disabled": False,
     "mux_enable": False,
     "fragment_setting": None,
