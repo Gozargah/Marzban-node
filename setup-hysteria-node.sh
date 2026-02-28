@@ -94,16 +94,17 @@ echo ""
 
 MARZBAN_URL="${HYSTERIA2_MARZBAN_URL:-$(env_get HYSTERIA2_MARZBAN_URL)}"
 if [ -z "$MARZBAN_URL" ]; then
-    read -rp "  Main Marzban URL (e.g. https://config.the-tech.studio): " MARZBAN_URL
+    # /dev/tty is required when script is piped via bash <(curl ...) — stdin is the pipe, not the terminal
+    read -rp "  Main Marzban URL (e.g. https://config.the-tech.studio): " MARZBAN_URL </dev/tty
 fi
 MARZBAN_URL="${MARZBAN_URL%/}"
-[ -z "$MARZBAN_URL" ] && err "HYSTERIA2_MARZBAN_URL is required"
+[ -z "$MARZBAN_URL" ] && err "HYSTERIA2_MARZBAN_URL is required. Pass it as env var: HYSTERIA2_MARZBAN_URL=https://... bash <(curl ...)"
 
 HOOK_TOKEN="${HYSTERIA2_HOOK_TOKEN:-$(env_get HYSTERIA2_HOOK_TOKEN)}"
 if [ -z "$HOOK_TOKEN" ]; then
-    read -rp "  HYSTERIA2_HOOK_TOKEN from main Marzban .env: " HOOK_TOKEN
+    read -rp "  HYSTERIA2_HOOK_TOKEN from main Marzban .env: " HOOK_TOKEN </dev/tty
 fi
-[ -z "$HOOK_TOKEN" ] && err "HYSTERIA2_HOOK_TOKEN is required"
+[ -z "$HOOK_TOKEN" ] && err "HYSTERIA2_HOOK_TOKEN is required. Pass it as env var: HYSTERIA2_HOOK_TOKEN=... bash <(curl ...)"
 
 HYSTERIA_PORT="$(env_get HYSTERIA2_PORT 2083)"
 
