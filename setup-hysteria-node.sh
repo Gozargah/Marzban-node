@@ -261,6 +261,17 @@ tls:
   cert: ${CERT_FILE}
   key:  ${KEY_FILE}
 
+# Longer idle timeout — default 30s often drops slow/high-latency links
+quic:
+  maxIdleTimeout: 120s
+
+# Explicit DNS so resolution does not hang on broken system resolver
+resolver:
+  type: udp
+  udp:
+    addr: 8.8.8.8:53
+    timeout: 4s
+
 auth:
   type: http
   http:
