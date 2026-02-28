@@ -128,16 +128,20 @@ class Service(object):
             try:
                 self.core.start(config)
 
+                started = False
                 start_time = time.time()
-                end_time = start_time + 3
+                end_time = start_time + 10
                 last_log = ''
                 while time.time() < end_time:
                     while logs:
                         log = logs.popleft()
                         if log:
                             last_log = log
-                        if f'Xray {self.core_version} started' in log:
+                        if self.core_version and f'Xray {self.core_version} started' in log:
+                            started = True
                             break
+                    if started:
+                        break
                     time.sleep(0.1)
 
             except Exception as exc:
@@ -183,16 +187,20 @@ class Service(object):
             with self.core.get_logs() as logs:
                 self.core.restart(config)
 
+                started = False
                 start_time = time.time()
-                end_time = start_time + 3
+                end_time = start_time + 10
                 last_log = ''
                 while time.time() < end_time:
                     while logs:
                         log = logs.popleft()
                         if log:
                             last_log = log
-                        if f'Xray {self.core_version} started' in log:
+                        if self.core_version and f'Xray {self.core_version} started' in log:
+                            started = True
                             break
+                    if started:
+                        break
                     time.sleep(0.1)
 
         except Exception as exc:

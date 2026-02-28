@@ -14,3 +14,18 @@ services:
 
     volumes:
       - /var/lib/marzban-node:/var/lib/marzban-node
+
+  # Hysteria2 sidecar — authenticates users against the MAIN Marzban server.
+  # Enable by setting HYSTERIA2_ENABLED=true and running setup-hysteria-node.sh first.
+  hysteria2:
+    image: tobyxdd/hysteria:latest
+    restart: always
+    network_mode: host
+    profiles:
+      - hysteria2
+    depends_on:
+      - marzban-node
+    volumes:
+      - /var/lib/marzban-node:/var/lib/marzban-node:ro
+      - /var/lib/marzban-node/hysteria.yaml:/etc/hysteria/config.yaml:ro
+    command: server
