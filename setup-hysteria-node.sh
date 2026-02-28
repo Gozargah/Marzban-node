@@ -12,12 +12,16 @@
 #      so subscriptions include the node with allowInsecure=false (or true as fallback)
 #
 # One-liner (fully non-interactive):
+#   curl -fsSL https://raw.githubusercontent.com/MaximPyatin/Marzban-node/dev/setup-hysteria-node.sh -o /tmp/sh.sh
 #   HYSTERIA2_MARZBAN_URL=https://config.the-tech.studio \
 #   HYSTERIA2_HOOK_TOKEN=<token> \
 #   NODE_DOMAIN=turkey.the-tech.studio \
 #   PANEL_ADMIN_USER=admin \
 #   PANEL_ADMIN_PASS=<password> \
-#   bash <(curl -fsSL https://raw.githubusercontent.com/MaximPyatin/Marzban-node/dev/setup-hysteria-node.sh)
+#   bash /tmp/sh.sh
+#
+# NOTE: bash <(curl ...) does NOT work on systems where /dev/fd is restricted.
+# Always download first, then run.
 
 set -euo pipefail
 
