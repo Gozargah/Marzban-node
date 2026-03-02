@@ -139,8 +139,19 @@ if [ -n "${UPDATE_HYSTERIA_CONFIG:-}" ]; then
     UP_MBPS="$(env_get HYSTERIA2_UP_MBPS 500)"
     DOWN_MBPS="$(env_get HYSTERIA2_DOWN_MBPS 500)"
     OBFS_PASSWORD="$(env_get HYSTERIA2_OBFS_PASSWORD)"
-    CERT_FILE="${NODE_DATA_DIR}/ssl_cert.pem"
-    KEY_FILE="${NODE_DATA_DIR}/ssl_key.pem"
+    # Prefer Let's Encrypt cert if available (full setup obtained it), fall back to self-signed
+    NODE_DOMAIN_ENV="$(env_get NODE_DOMAIN)"
+    LE_CERT_PATH="/etc/letsencrypt/live/${NODE_DOMAIN_ENV}/fullchain.pem"
+    LE_KEY_PATH="/etc/letsencrypt/live/${NODE_DOMAIN_ENV}/privkey.pem"
+    if [ -n "$NODE_DOMAIN_ENV" ] && [ -f "$LE_CERT_PATH" ] && [ -f "$LE_KEY_PATH" ]; then
+        CERT_FILE="$LE_CERT_PATH"
+        KEY_FILE="$LE_KEY_PATH"
+        log "Using Let's Encrypt cert for ${NODE_DOMAIN_ENV}"
+    else
+        CERT_FILE="${NODE_DATA_DIR}/ssl_cert.pem"
+        KEY_FILE="${NODE_DATA_DIR}/ssl_key.pem"
+        log "Using self-signed cert (no Let's Encrypt cert found)"
+    fi
     [ -z "$HYSTERIA2_MARZBAN_URL" ] || [ -z "$HYSTERIA2_HOOK_TOKEN" ] && err "HYSTERIA2_MARZBAN_URL and HYSTERIA2_HOOK_TOKEN must be in .env"
     log "Updating hysteria.yaml (Salamander obfs, quic maxIdleTimeout, resolver) from .env..."
     cat > "$HYSTERIA_YAML" << YAML
@@ -330,6 +341,8 @@ env_set HYSTERIA2_TRAFFIC_LISTEN  "$TRAFFIC_LISTEN"
 env_set HYSTERIA2_UP_MBPS         "$UP_MBPS"
 env_set HYSTERIA2_DOWN_MBPS       "$DOWN_MBPS"
 env_set HYSTERIA2_OBFS_PASSWORD   "$OBFS_PASSWORD"
+# Save domain so UPDATE_HYSTERIA_CONFIG can find the Let's Encrypt cert
+[ -n "${NODE_DOMAIN:-}" ] && env_set NODE_DOMAIN "$NODE_DOMAIN"
 
 # ── write hysteria.yaml ───────────────────────────────────────────────────────
 
