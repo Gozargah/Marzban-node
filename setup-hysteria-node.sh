@@ -169,8 +169,8 @@ obfs:
     password: ${OBFS_PASSWORD}
 
 quic:
-  maxIdleTimeout: 60s
-  keepAlivePeriod: 10s
+  maxIdleTimeout: 90s
+  keepAlivePeriod: 15s
 
 resolver:
   type: udp
@@ -366,10 +366,12 @@ obfs:
   salamander:
     password: ${OBFS_PASSWORD}
 
-# QUIC tuning — critical for mobile networks (CGNAT, tower switching, unstable channel)
+# QUIC tuning — optimised for Russian mobile networks (MTS, Beeline, Megafon, Tele2).
+# keepAlivePeriod: server sends QUIC PING every 15s to keep CGNAT UDP session alive.
+# maxIdleTimeout: 90s covers high-latency links to foreign nodes (USA, Turkey).
 quic:
-  maxIdleTimeout: 60s
-  keepAlivePeriod: 10s
+  maxIdleTimeout: 90s
+  keepAlivePeriod: 15s
 
 # Explicit DNS so resolution does not hang on broken system resolver
 resolver:
