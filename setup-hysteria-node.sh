@@ -75,12 +75,12 @@ ask() {
     [ -n "$current" ] && return   # already set via env
     current="$(env_get "$var" "$default")"
     if [ -n "$current" ]; then
-        eval "$var='$current'"
+        printf -v "$var" '%s' "$current"
         return
     fi
     local answer
     read -rp "  $prompt: " answer </dev/tty
-    eval "$var='$answer'"
+    printf -v "$var" '%s' "$answer"
 }
 
 env_get() {
@@ -135,7 +135,7 @@ if [ -n "${UPDATE_HYSTERIA_CONFIG:-}" ]; then
     HYSTERIA2_HOOK_TOKEN="$(env_get HYSTERIA2_HOOK_TOKEN)"
     HYSTERIA_PORT="$(env_get HYSTERIA2_PORT 2083)"
     TRAFFIC_SECRET="$(env_get HYSTERIA2_TRAFFIC_SECRET)"
-    TRAFFIC_LISTEN="$(env_get HYSTERIA2_TRAFFIC_LISTEN "127.0.0.1:9999")"
+    TRAFFIC_LISTEN="$(env_get HYSTERIA2_TRAFFIC_LISTEN "0.0.0.0:9999")"
     UP_MBPS="$(env_get HYSTERIA2_UP_MBPS 500)"
     DOWN_MBPS="$(env_get HYSTERIA2_DOWN_MBPS 500)"
     OBFS_PASSWORD="$(env_get HYSTERIA2_OBFS_PASSWORD)"
@@ -217,7 +217,7 @@ if [ -z "$TRAFFIC_SECRET" ]; then
     log "Generated HYSTERIA2_TRAFFIC_SECRET"
 fi
 
-TRAFFIC_LISTEN="$(env_get HYSTERIA2_TRAFFIC_LISTEN "127.0.0.1:9999")"
+TRAFFIC_LISTEN="$(env_get HYSTERIA2_TRAFFIC_LISTEN "0.0.0.0:9999")"
 UP_MBPS="${HYSTERIA2_UP_MBPS:-$(env_get HYSTERIA2_UP_MBPS 500)}"
 DOWN_MBPS="${HYSTERIA2_DOWN_MBPS:-$(env_get HYSTERIA2_DOWN_MBPS 500)}"
 
@@ -311,6 +311,10 @@ if [ ! -f "${NODE_DATA_DIR}/ssl_cert.pem" ] || [ ! -f "${NODE_DATA_DIR}/ssl_key.
             sleep 1
             [ -f "${NODE_DATA_DIR}/ssl_cert.pem" ] && break
         done
+    fi
+    if [ ! -f "${NODE_DATA_DIR}/ssl_cert.pem" ] || [ ! -f "${NODE_DATA_DIR}/ssl_key.pem" ]; then
+        err "Node SSL certs still missing after 15 s. " \
+            "Start marzban-node manually, wait for it to generate certs, then re-run this script."
     fi
 fi
 
@@ -540,8 +544,11 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
     -d '{"addr":"127.0.0.1:1","auth":"probe","id":"probe"}' \
     --connect-timeout 5 --max-time 10 -k 2>/dev/null || echo "000")
 
-[ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] && ok "Auth endpoint reachable (HTTP ${HTTP_CODE})" || \
-    warn "Auth endpoint returned HTTP ${HTTP_CODE}"
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+    ok "Auth endpoint reachable (HTTP ${HTTP_CODE})"
+else
+    warn "Auth endpoint returned HTTP ${HTTP_CODE} — check HYSTERIA2_HOOK_TOKEN and panel URL"
+fi
 
 # ── done ──────────────────────────────────────────────────────────────────────
 
@@ -555,6 +562,9 @@ log "  Auth URL        : ${HYSTERIA2_MARZBAN_URL}"
 log "  Traffic stats   : ${TRAFFIC_LISTEN}"
 log "  Salamander obfs : enabled"
 log "  Obfs password   : ${OBFS_PASSWORD}"
+log "  Traffic stats   : ${TRAFFIC_LISTEN}  (protected by HYSTERIA2_TRAFFIC_SECRET)"
+echo "  IMPORTANT: port 9999 must be reachable from your Marzban panel IP."
+echo "  Firewall example: ufw allow from <panel-ip> to any port 9999"
 echo ""
 echo "  ⚠  IMPORTANT — DPI obfuscation requires client-side config:"
 echo "     Add these params to the hy2:// link (or your xray_config.json inbound):"
