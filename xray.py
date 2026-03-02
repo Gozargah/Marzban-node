@@ -32,6 +32,15 @@ class XRayConfig(dict):
         return json.dumps(self, **json_kwargs)
 
     def _apply_api(self):
+        # Clear log file paths so Xray writes to stdout on the node.
+        # The panel's xray_config.json points to /var/lib/marzban/*.log which
+        # does not exist on node servers — Xray would silently fail to open
+        # those files, write nothing to stdout, and the 10-second startup
+        # detection window would always expire, causing panel timeouts.
+        if 'log' in self:
+            self['log'].pop('access', None)
+            self['log'].pop('error', None)
+
         for inbound in self.get('inbounds', []).copy():
             if inbound.get('protocol') == 'dokodemo-door' and inbound.get('tag') == 'API_INBOUND':
                 self['inbounds'].remove(inbound)
