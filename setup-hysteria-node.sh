@@ -158,7 +158,8 @@ obfs:
     password: ${OBFS_PASSWORD}
 
 quic:
-  maxIdleTimeout: 120s
+  maxIdleTimeout: 60s
+  keepAlivePeriod: 10s
 
 resolver:
   type: udp
@@ -171,6 +172,7 @@ auth:
   http:
     url: ${HYSTERIA2_MARZBAN_URL}/api/hysteria/auth?token=${HYSTERIA2_HOOK_TOKEN}
     insecure: true
+    timeout: 10s
 
 bandwidth:
   up:   ${UP_MBPS} mbps
@@ -351,9 +353,10 @@ obfs:
   salamander:
     password: ${OBFS_PASSWORD}
 
-# Longer idle timeout — default 30s often drops slow/high-latency links
+# QUIC tuning — critical for mobile networks (CGNAT, tower switching, unstable channel)
 quic:
-  maxIdleTimeout: 120s
+  maxIdleTimeout: 60s
+  keepAlivePeriod: 10s
 
 # Explicit DNS so resolution does not hang on broken system resolver
 resolver:
@@ -367,6 +370,7 @@ auth:
   http:
     url: ${HYSTERIA2_MARZBAN_URL}/api/hysteria/auth?token=${HYSTERIA2_HOOK_TOKEN}
     insecure: true
+    timeout: 10s
 
 bandwidth:
   up:   ${UP_MBPS} mbps
