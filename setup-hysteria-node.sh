@@ -185,8 +185,6 @@ masquerade:
   proxy:
     url: https://news.ycombinator.com
     rewriteHost: true
-  listenHTTP:  :80
-  listenHTTPS: :443
 YAML
     log "Restarting hysteria2..."
     (cd "$NODE_COMPOSE_DIR" && docker compose restart hysteria2) || err "docker compose restart hysteria2 failed"
@@ -378,15 +376,14 @@ trafficStats:
   listen: ${TRAFFIC_LISTEN}
   secret: ${TRAFFIC_SECRET}
 
-# Masquerade: respond to TCP probes like a real website.
-# Censors probing port ${HYSTERIA_PORT}/tcp get a valid HTTP/HTTPS response.
+# Masquerade: respond to QUIC probes like a real HTTPS/H3 website.
+# TCP listeners on :80/:443 are intentionally omitted — those ports are
+# typically occupied by marzban-node or nginx on the same host.
 masquerade:
   type: proxy
   proxy:
     url: https://news.ycombinator.com
     rewriteHost: true
-  listenHTTP:  :80
-  listenHTTPS: :443
 YAML
 ok "hysteria.yaml written (TLS: $( $USE_SELFSIGNED && echo 'self-signed' || echo "Let's Encrypt ${NODE_DOMAIN}" ))"
 
