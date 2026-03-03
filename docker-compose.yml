@@ -1,6 +1,6 @@
 services:
   marzban-node:
-    image: gozargah/marzban-node:latest
+    build: .
     restart: always
     network_mode: host
 

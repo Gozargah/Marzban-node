@@ -48,10 +48,18 @@ for d in "${CANDIDATE_DIRS[@]}"; do
         break
     fi
 done
-if [ -z "$NODE_COMPOSE_DIR" ]; then
-    for d in "${CANDIDATE_DIRS[@]}"; do
-        [ -d "$d" ] && { NODE_COMPOSE_DIR="$d"; break; }
-    done
+# If not found and this is not an update, fail early with a clear message.
+# For UPDATE_HYSTERIA_CONFIG mode we don't need docker-compose.yml to exist first.
+if [ -z "$NODE_COMPOSE_DIR" ] && [ -z "${UPDATE_HYSTERIA_CONFIG:-}" ]; then
+    echo ""
+    echo "ERROR: Could not find marzban-node docker-compose.yml in any standard location."
+    echo "  Searched: ${CANDIDATE_DIRS[*]}"
+    echo ""
+    echo "  Please install marzban-node first, then re-run this script."
+    echo "  Or pass the directory explicitly:"
+    echo "    NODE_COMPOSE_DIR=/path/to/marzban-node ... bash /tmp/hy2-setup.sh"
+    echo ""
+    exit 1
 fi
 [ -z "$NODE_COMPOSE_DIR" ] && NODE_COMPOSE_DIR="/opt/marzban-node"
 
@@ -227,12 +235,6 @@ TRAFFIC_LISTEN="$(env_get HYSTERIA2_TRAFFIC_LISTEN "0.0.0.0:9999")"
 UP_MBPS="${HYSTERIA2_UP_MBPS:-$(env_get HYSTERIA2_UP_MBPS 500)}"
 DOWN_MBPS="${HYSTERIA2_DOWN_MBPS:-$(env_get HYSTERIA2_DOWN_MBPS 500)}"
 
-OBFS_PASSWORD="${HYSTERIA2_OBFS_PASSWORD:-$(env_get HYSTERIA2_OBFS_PASSWORD)}"
-if [ -z "$OBFS_PASSWORD" ]; then
-    OBFS_PASSWORD="$(generate_secret)"
-    log "Generated HYSTERIA2_OBFS_PASSWORD (Salamander DPI obfuscation)"
-fi
-
 mkdir -p "$NODE_DATA_DIR"
 
 # ── TLS cert ──────────────────────────────────────────────────────────────────
@@ -335,7 +337,6 @@ env_set HYSTERIA2_TRAFFIC_SECRET  "$TRAFFIC_SECRET"
 env_set HYSTERIA2_TRAFFIC_LISTEN  "$TRAFFIC_LISTEN"
 env_set HYSTERIA2_UP_MBPS         "$UP_MBPS"
 env_set HYSTERIA2_DOWN_MBPS       "$DOWN_MBPS"
-env_set HYSTERIA2_OBFS_PASSWORD   "$OBFS_PASSWORD"
 # Save domain so UPDATE_HYSTERIA_CONFIG can find the Let's Encrypt cert
 [ -n "${NODE_DOMAIN:-}" ] && env_set NODE_DOMAIN "$NODE_DOMAIN"
 
