@@ -174,6 +174,11 @@ tls:
 quic:
   maxIdleTimeout: 90s
   keepAlivePeriod: 15s
+  disablePathMTUDiscovery: true
+
+transport:
+  udp:
+    mtu: 1400
 
 resolver:
   type: udp
@@ -355,11 +360,14 @@ tls:
   key:  ${KEY_FILE}
 
 # QUIC tuning — optimised for Russian mobile networks (MTS, Beeline, Megafon, Tele2).
-# keepAlivePeriod: server sends QUIC PING every 15s to keep CGNAT UDP session alive.
-# maxIdleTimeout: 90s covers high-latency links to foreign nodes (USA, Turkey).
 quic:
   maxIdleTimeout: 90s
   keepAlivePeriod: 15s
+  disablePathMTUDiscovery: true
+
+transport:
+  udp:
+    mtu: 1400
 
 # Explicit DNS so resolution does not hang on broken system resolver
 resolver:
