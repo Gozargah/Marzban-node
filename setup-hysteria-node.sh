@@ -163,11 +163,6 @@ tls:
   cert: ${CERT_FILE}
   key:  ${KEY_FILE}
 
-obfs:
-  type: salamander
-  salamander:
-    password: ${OBFS_PASSWORD}
-
 quic:
   maxIdleTimeout: 90s
   keepAlivePeriod: 15s
@@ -357,14 +352,6 @@ listen: ":${HYSTERIA_PORT}"
 tls:
   cert: ${CERT_FILE}
   key:  ${KEY_FILE}
-
-# Salamander obfuscation: disguises QUIC packets as random UDP bytes.
-# DPI sees random noise instead of HTTP/3 — strongest single DPI bypass measure.
-# ALL clients must configure the same obfs password in their hy2:// link.
-obfs:
-  type: salamander
-  salamander:
-    password: ${OBFS_PASSWORD}
 
 # QUIC tuning — optimised for Russian mobile networks (MTS, Beeline, Megafon, Tele2).
 # keepAlivePeriod: server sends QUIC PING every 15s to keep CGNAT UDP session alive.
@@ -576,15 +563,7 @@ log "  Hysteria2 port  : ${HYSTERIA_PORT}"
 log "  TLS             : $( $USE_SELFSIGNED && echo 'self-signed (allowInsecure=true)' || echo "Let's Encrypt (${NODE_DOMAIN})" )"
 log "  Auth URL        : ${HYSTERIA2_MARZBAN_URL}"
 log "  Traffic stats   : ${TRAFFIC_LISTEN}"
-log "  Salamander obfs : enabled"
-log "  Obfs password   : ${OBFS_PASSWORD}"
 log "  Traffic stats   : ${TRAFFIC_LISTEN}  (protected by HYSTERIA2_TRAFFIC_SECRET)"
 echo "  IMPORTANT: port 9999 must be reachable from your Marzban panel IP."
 echo "  Firewall example: ufw allow from <panel-ip> to any port 9999"
-echo ""
-echo "  ⚠  IMPORTANT — DPI obfuscation requires client-side config:"
-echo "     Add these params to the hy2:// link (or your xray_config.json inbound):"
-echo "       obfs=salamander"
-echo "       obfs-password=${OBFS_PASSWORD}"
-echo "     Without this clients will NOT connect when obfs is active."
 echo ""
