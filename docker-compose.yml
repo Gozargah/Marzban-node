@@ -6,6 +6,7 @@ services:
 
     volumes:
       - /var/lib/marzban-node:/var/lib/marzban-node
+      - /var/lib/marzban:/var/lib/marzban
     environment:
       SSL_CLIENT_CERT_FILE: "/var/lib/marzban-node/ssl_client_cert.pem"
       SERVICE_PROTOCOL: "rest"
