@@ -21,6 +21,17 @@ SERVICE_PROTOCOL = config('SERVICE_PROTOCOL', cast=str, default='rest')
 
 INBOUNDS = config("INBOUNDS", cast=lambda v: [x.strip() for x in v.split(',')] if v else [], default="")
 
+# MTProto (Telemt sidecar on selected node)
+MTPROTO_ENABLED = config("MTPROTO_ENABLED", cast=bool, default=False)
+MTPROTO_DOMAIN = config("MTPROTO_DOMAIN", default="")
+MTPROTO_PORT = config("MTPROTO_PORT", cast=int, default=1443)
+MTPROTO_MODE = config("MTPROTO_MODE", default="dd").strip().lower()
+MTPROTO_TLS_DOMAIN = config("MTPROTO_TLS_DOMAIN", default="")
+MTPROTO_CONFIG_PATH = config(
+    "MTPROTO_CONFIG_PATH",
+    default="/var/lib/marzban-node/mtproto/telemt.toml",
+)
+
 # Hysteria2 (external hysteriad sidecar)
 # Set HYSTERIA2_ENABLED=true to start hysteriad alongside this node
 HYSTERIA2_ENABLED = config("HYSTERIA2_ENABLED", cast=bool, default=False)
@@ -30,7 +41,8 @@ HYSTERIA2_MARZBAN_URL = config("HYSTERIA2_MARZBAN_URL", default="")
 # Must match HYSTERIA2_HOOK_TOKEN in main Marzban .env
 HYSTERIA2_HOOK_TOKEN = config("HYSTERIA2_HOOK_TOKEN", default="")
 HYSTERIA2_TRAFFIC_SECRET = config("HYSTERIA2_TRAFFIC_SECRET", default="")
-HYSTERIA2_TRAFFIC_LISTEN = config("HYSTERIA2_TRAFFIC_LISTEN", default="127.0.0.1:9999")
+# Must bind 0.0.0.0 so the main Marzban panel can poll /traffic (127.0.0.1 is only for local hysteria on the panel host).
+HYSTERIA2_TRAFFIC_LISTEN = config("HYSTERIA2_TRAFFIC_LISTEN", default="0.0.0.0:9999")
 HYSTERIA2_UP_MBPS = config("HYSTERIA2_UP_MBPS", cast=int, default=500)
 HYSTERIA2_DOWN_MBPS = config("HYSTERIA2_DOWN_MBPS", cast=int, default=500)
 # TLS cert for hysteriad — defaults to the node's own SSL cert

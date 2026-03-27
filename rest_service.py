@@ -8,10 +8,12 @@ from fastapi import (APIRouter, Body, FastAPI, HTTPException, Request,
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect
 
 from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
+from mtproto import apply_mtproto_users, get_mtproto_status
 from xray import XRayConfig, XRayCore
 
 app = FastAPI()
@@ -26,6 +28,11 @@ def validation_exception_handler(request: Request, exc: RequestValidationError):
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({"detail": details}),
     )
+
+
+class MTProtoUser(BaseModel):
+    username: str
+    secret: str
 
 
 class Service(object):
@@ -49,6 +56,8 @@ class Service(object):
         self.router.add_api_route("/start", self.start, methods=["POST"])
         self.router.add_api_route("/stop", self.stop, methods=["POST"])
         self.router.add_api_route("/restart", self.restart, methods=["POST"])
+        self.router.add_api_route("/mtproto/status", self.mtproto_status, methods=["POST"])
+        self.router.add_api_route("/mtproto/apply", self.apply_mtproto, methods=["POST"])
 
         self.router.add_websocket_route("/logs", self.logs)
 
@@ -110,6 +119,23 @@ class Service(object):
     def ping(self, session_id: UUID = Body(embed=True)):
         self.match_session_id(session_id)
         return {}
+
+    def mtproto_status(self, session_id: UUID = Body(embed=True)):
+        self.match_session_id(session_id)
+        return get_mtproto_status()
+
+    def apply_mtproto(
+        self,
+        session_id: UUID = Body(embed=True),
+        users: list[MTProtoUser] = Body(embed=True),
+    ):
+        self.match_session_id(session_id)
+        try:
+            return apply_mtproto_users([user.model_dump() for user in users])
+        except ValueError as exc:
+            detail = str(exc)
+            status_code = 404 if "disabled" in detail.lower() else 400
+            raise HTTPException(status_code=status_code, detail=detail)
 
     def start(self, session_id: UUID = Body(embed=True), config: str = Body(embed=True)):
         self.match_session_id(session_id)
