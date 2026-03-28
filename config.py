@@ -27,6 +27,26 @@ MTPROTO_DOMAIN = config("MTPROTO_DOMAIN", default="")
 MTPROTO_PORT = config("MTPROTO_PORT", cast=int, default=1443)
 MTPROTO_MODE = config("MTPROTO_MODE", default="dd").strip().lower()
 MTPROTO_TLS_DOMAIN = config("MTPROTO_TLS_DOMAIN", default="")
+MTPROTO_USE_MIDDLE_PROXY = config("MTPROTO_USE_MIDDLE_PROXY", cast=bool, default=False)
+MTPROTO_LISTEN_ADDR_IPV4 = config("MTPROTO_LISTEN_ADDR_IPV4", default="0.0.0.0")
+MTPROTO_IPV6_ENABLED = config("MTPROTO_IPV6_ENABLED", cast=bool, default=False)
+MTPROTO_NETWORK_PREFER = config("MTPROTO_NETWORK_PREFER", cast=int, default=4)
+MTPROTO_SHOW_LINKS = config("MTPROTO_SHOW_LINKS", cast=bool, default=False)
+MTPROTO_LOG_LEVEL = config("MTPROTO_LOG_LEVEL", default="normal").strip().lower()
+MTPROTO_RUST_LOG = config("MTPROTO_RUST_LOG", default="info,telemt::links=warn")
+MTPROTO_RELOAD_INTERVAL = config("MTPROTO_RELOAD_INTERVAL", cast=int, default=5)
+MTPROTO_CLIENT_HANDSHAKE_TIMEOUT = config(
+    "MTPROTO_CLIENT_HANDSHAKE_TIMEOUT", cast=int, default=15
+)
+MTPROTO_TG_CONNECT_TIMEOUT = config(
+    "MTPROTO_TG_CONNECT_TIMEOUT", cast=int, default=10
+)
+MTPROTO_CLIENT_KEEPALIVE_TIMEOUT = config(
+    "MTPROTO_CLIENT_KEEPALIVE_TIMEOUT", cast=int, default=60
+)
+MTPROTO_CLIENT_ACK_TIMEOUT = config(
+    "MTPROTO_CLIENT_ACK_TIMEOUT", cast=int, default=300
+)
 MTPROTO_CONFIG_PATH = config(
     "MTPROTO_CONFIG_PATH",
     default="/var/lib/marzban-node/mtproto/telemt.toml",

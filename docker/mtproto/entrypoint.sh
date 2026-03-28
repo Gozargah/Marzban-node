@@ -3,6 +3,7 @@ set -eu
 
 CONFIG_PATH="${MTPROTO_CONFIG_PATH:-/var/lib/marzban-node/mtproto/telemt.toml}"
 POLL_INTERVAL="${MTPROTO_RELOAD_INTERVAL:-5}"
+RUST_LOG_FILTER="${MTPROTO_RUST_LOG:-info,telemt::links=warn}"
 
 child_pid=""
 current_hash=""
@@ -18,7 +19,7 @@ cleanup() {
 trap cleanup INT TERM
 
 start_proxy() {
-  /usr/local/bin/telemt "$CONFIG_PATH" &
+  RUST_LOG="$RUST_LOG_FILTER" /usr/local/bin/telemt "$CONFIG_PATH" &
   child_pid="$!"
 }
 

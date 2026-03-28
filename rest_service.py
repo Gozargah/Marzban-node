@@ -122,7 +122,10 @@ class Service(object):
 
     def mtproto_status(self, session_id: UUID = Body(embed=True)):
         self.match_session_id(session_id)
-        return get_mtproto_status()
+        try:
+            return get_mtproto_status()
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
 
     def apply_mtproto(
         self,
