@@ -70,7 +70,7 @@
 
 ```env
 MTPROTO_SECRET_MODE=dd
-MTPROTO_USE_MIDDLE_PROXY=false
+MTPROTO_USE_MIDDLE_PROXY=true
 MTPROTO_LISTEN_ADDR_IPV4=0.0.0.0
 MTPROTO_IPV6_ENABLED=false
 MTPROTO_NETWORK_PREFER=4
@@ -78,8 +78,14 @@ MTPROTO_SHOW_LINKS=false
 MTPROTO_LOG_LEVEL=normal
 MTPROTO_RUST_LOG=info,telemt::links=warn
 MTPROTO_RELOAD_INTERVAL=5
-MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=15
-MTPROTO_TG_CONNECT_TIMEOUT=10
+MTPROTO_PROCESS_RESTART_DELAY_MS=1000
+MTPROTO_UPSTREAM_CONNECT_RETRY_ATTEMPTS=3
+MTPROTO_UPSTREAM_CONNECT_RETRY_BACKOFF_MS=250
+MTPROTO_UPSTREAM_CONNECT_BUDGET_MS=25000
+MTPROTO_UPSTREAM_UNHEALTHY_FAIL_THRESHOLD=3
+MTPROTO_UPSTREAM_CONNECT_FAILFAST_HARD_ERRORS=false
+MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=25
+MTPROTO_TG_CONNECT_TIMEOUT=20
 MTPROTO_CLIENT_KEEPALIVE_TIMEOUT=60
 MTPROTO_CLIENT_ACK_TIMEOUT=300
 ```
@@ -90,9 +96,10 @@ MTPROTO_CLIENT_ACK_TIMEOUT=300
 
 - IPv4-only без неявных fallback
 - явный bind на `0.0.0.0`
-- явные таймауты для handshake и соединения с Telegram
+- щадящий resilience budget для `node -> Telegram`
 - configurable `middle proxy`, а не hardcoded поведение
 - `tg://` links не печатаются в production logs по умолчанию
+- sidecar больше не должен жестко перезапускать `telemt` на каждый user sync
 
 ## Что именно нужно развернуть
 
@@ -178,7 +185,7 @@ MTPROTO_MODE=dd
 После скрипта в `.env` также должны быть:
 
 ```env
-MTPROTO_USE_MIDDLE_PROXY=false
+MTPROTO_USE_MIDDLE_PROXY=true
 MTPROTO_LISTEN_ADDR_IPV4=0.0.0.0
 MTPROTO_IPV6_ENABLED=false
 MTPROTO_NETWORK_PREFER=4
@@ -186,8 +193,14 @@ MTPROTO_SHOW_LINKS=false
 MTPROTO_LOG_LEVEL=normal
 MTPROTO_RUST_LOG=info,telemt::links=warn
 MTPROTO_RELOAD_INTERVAL=5
-MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=15
-MTPROTO_TG_CONNECT_TIMEOUT=10
+MTPROTO_PROCESS_RESTART_DELAY_MS=1000
+MTPROTO_UPSTREAM_CONNECT_RETRY_ATTEMPTS=3
+MTPROTO_UPSTREAM_CONNECT_RETRY_BACKOFF_MS=250
+MTPROTO_UPSTREAM_CONNECT_BUDGET_MS=25000
+MTPROTO_UPSTREAM_UNHEALTHY_FAIL_THRESHOLD=3
+MTPROTO_UPSTREAM_CONNECT_FAILFAST_HARD_ERRORS=false
+MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=25
+MTPROTO_TG_CONNECT_TIMEOUT=20
 MTPROTO_CLIENT_KEEPALIVE_TIMEOUT=60
 MTPROTO_CLIENT_ACK_TIMEOUT=300
 ```
@@ -311,7 +324,7 @@ MTPROTO_ENABLED=true
 MTPROTO_DOMAIN=tg.the-tech.studio
 MTPROTO_PORT=1443
 MTPROTO_MODE=dd
-MTPROTO_USE_MIDDLE_PROXY=false
+MTPROTO_USE_MIDDLE_PROXY=true
 MTPROTO_LISTEN_ADDR_IPV4=0.0.0.0
 MTPROTO_IPV6_ENABLED=false
 MTPROTO_NETWORK_PREFER=4
@@ -319,8 +332,14 @@ MTPROTO_SHOW_LINKS=false
 MTPROTO_LOG_LEVEL=normal
 MTPROTO_RUST_LOG=info,telemt::links=warn
 MTPROTO_RELOAD_INTERVAL=5
-MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=15
-MTPROTO_TG_CONNECT_TIMEOUT=10
+MTPROTO_PROCESS_RESTART_DELAY_MS=1000
+MTPROTO_UPSTREAM_CONNECT_RETRY_ATTEMPTS=3
+MTPROTO_UPSTREAM_CONNECT_RETRY_BACKOFF_MS=250
+MTPROTO_UPSTREAM_CONNECT_BUDGET_MS=25000
+MTPROTO_UPSTREAM_UNHEALTHY_FAIL_THRESHOLD=3
+MTPROTO_UPSTREAM_CONNECT_FAILFAST_HARD_ERRORS=false
+MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=25
+MTPROTO_TG_CONNECT_TIMEOUT=20
 MTPROTO_CLIENT_KEEPALIVE_TIMEOUT=60
 MTPROTO_CLIENT_ACK_TIMEOUT=300
 MTPROTO_CONFIG_PATH=/var/lib/marzban-node/mtproto/telemt.toml
@@ -349,6 +368,12 @@ sed -n '1,120p' /var/lib/marzban-node/mtproto/telemt.toml
 И для твоего кейса там ожидаемо увидеть:
 
 ```toml
+[general]
+use_middle_proxy = true
+upstream_connect_retry_attempts = 3
+upstream_connect_retry_backoff_ms = 250
+upstream_connect_budget_ms = 25000
+
 [network]
 ipv4 = true
 ipv6 = false
@@ -364,8 +389,8 @@ port = 1443
 listen_addr_ipv4 = "0.0.0.0"
 
 [timeouts]
-client_handshake = 15
-tg_connect = 10
+client_handshake = 25
+tg_connect = 20
 client_keepalive = 60
 client_ack = 300
 ```
@@ -401,10 +426,18 @@ curl -sk https://127.0.0.1:62050/mtproto/status \
 - `log_level`
 - `rust_log`
 - `use_middle_proxy`
+- `runtime_profile`
 - `listen_addr_ipv4`
 - `ipv6_enabled`
 - `network_prefer`
+- `reload_strategy`
 - `reload_interval`
+- `process_restart_delay_ms`
+- `upstream_connect_retry_attempts`
+- `upstream_connect_retry_backoff_ms`
+- `upstream_connect_budget_ms`
+- `upstream_unhealthy_fail_threshold`
+- `upstream_connect_failfast_hard_errors`
 - `client_handshake_timeout`
 - `tg_connect_timeout`
 - `client_keepalive_timeout`
@@ -558,6 +591,32 @@ ss -ltnp | grep 1443
   клиент дошел до sidecar, но sidecar не смог нормально завершить upstream Telegram stage в отведенный таймаут.
 - `early eof` единично:
   обычно клиент/сканер/оборванная попытка, а не массовая причина деградации.
+
+## Рекомендуемый runtime profile для одного VPS
+
+Если узел показывает частые `Telegram handshake timeout`, но packet capture подтверждает, что Telegram reachable, рекомендуемый best-effort профиль для одного VPS такой:
+
+- `MTPROTO_USE_MIDDLE_PROXY=true`
+- `MTPROTO_UPSTREAM_CONNECT_RETRY_ATTEMPTS=3`
+- `MTPROTO_UPSTREAM_CONNECT_RETRY_BACKOFF_MS=250`
+- `MTPROTO_UPSTREAM_CONNECT_BUDGET_MS=25000`
+- `MTPROTO_CLIENT_HANDSHAKE_TIMEOUT=25`
+- `MTPROTO_TG_CONNECT_TIMEOUT=20`
+
+Это не дает 100% гарантии на плохом VPS/AS, но убирает часть провалов, вызванных слишком агрессивным direct-path runtime.
+
+## Что изменилось в reload strategy
+
+Теперь sidecar должен использовать internal hot reload самого `telemt` и не обязан жестко делать stop/start процесса на каждое изменение `telemt.toml`.
+
+Смысл такой:
+
+- host продолжает пушить users на node
+- node продолжает атомарно заменять `telemt.toml`
+- `telemt` сам применяет hot reload
+- shell entrypoint отвечает только за liveness и crash-restart процесса
+
+Это уменьшает self-inflicted reconnects во время user sync.
 
 ## Минимальный рабочий чеклист
 

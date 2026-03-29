@@ -4,9 +4,10 @@ set -eu
 CONFIG_PATH="${MTPROTO_CONFIG_PATH:-/var/lib/marzban-node/mtproto/telemt.toml}"
 POLL_INTERVAL="${MTPROTO_RELOAD_INTERVAL:-5}"
 RUST_LOG_FILTER="${MTPROTO_RUST_LOG:-info,telemt::links=warn}"
+RESTART_DELAY_MS="${MTPROTO_PROCESS_RESTART_DELAY_MS:-1000}"
 
 child_pid=""
-current_hash=""
+started_once="0"
 
 cleanup() {
   if [ -n "$child_pid" ] && kill -0 "$child_pid" 2>/dev/null; then
@@ -31,20 +32,23 @@ stop_proxy() {
   child_pid=""
 }
 
+sleep_ms() {
+  ms="$1"
+  awk "BEGIN { printf \"%.3f\", ${ms}/1000 }" | xargs sleep
+}
+
 while true; do
   if [ ! -f "$CONFIG_PATH" ]; then
     sleep "$POLL_INTERVAL"
     continue
   fi
 
-  next_hash="$(sha256sum "$CONFIG_PATH" | awk '{print $1}')"
-
-  if [ "$next_hash" != "$current_hash" ]; then
-    stop_proxy
+  if [ -z "$child_pid" ] || ! kill -0 "$child_pid" 2>/dev/null; then
+    if [ "$started_once" = "1" ]; then
+      sleep_ms "$RESTART_DELAY_MS"
+    fi
     start_proxy
-    current_hash="$next_hash"
-  elif [ -z "$child_pid" ] || ! kill -0 "$child_pid" 2>/dev/null; then
-    start_proxy
+    started_once="1"
   fi
 
   sleep "$POLL_INTERVAL"
