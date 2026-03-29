@@ -6,7 +6,11 @@ RUN apk add --no-cache build-base git musl-dev
 
 WORKDIR /src
 
+# Keep tg_connect effective until telemt uses config.timeouts.tg_connect upstream.
+COPY docker/mtproto/patches/0001-use-configured-tg-connect-timeout.patch /tmp/telemt-tg-connect.patch
+
 RUN git clone --depth 1 --branch "${TELEMT_REF}" https://github.com/telemt/telemt.git . \
+    && git apply /tmp/telemt-tg-connect.patch \
     && cargo build --release \
     && cp target/release/telemt /usr/local/bin/telemt
 
