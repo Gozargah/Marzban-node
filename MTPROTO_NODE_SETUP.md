@@ -116,12 +116,21 @@ MTPROTO_PUBLIC_PORT=1443
 MTPROTO_SECRET_MODE=dd
 ```
 
+Для **ee** дополнительно на панели:
+
+```env
+MTPROTO_SECRET_MODE=ee
+MTPROTO_TLS_DOMAIN=example.com
+```
+
+(`MTPROTO_TLS_DOMAIN` должен совпадать с `MTPROTO_TLS_DOMAIN` на узле.)
+
 Где:
 
 - `MTPROTO_NODE_NAME` — точное имя узла из панели
-- `MTPROTO_PUBLIC_HOST` — домен узла, по которому клиент будет подключаться
-- `MTPROTO_PUBLIC_PORT` — порт MTProto на узле
-- `MTPROTO_SECRET_MODE` — `dd`
+- `MTPROTO_PUBLIC_HOST` — домен узла, по которому клиент будет подключаться (должен совпадать с `MTPROTO_DOMAIN` на узле)
+- `MTPROTO_PUBLIC_PORT` — порт MTProto на узле (должен совпадать с `MTPROTO_PORT` на узле)
+- `MTPROTO_SECRET_MODE` — `dd` или `ee`
 
 На хосте локальный `mtproto` контейнер не нужен.
 
@@ -205,6 +214,44 @@ MTPROTO_CLIENT_KEEPALIVE_TIMEOUT=60
 MTPROTO_CLIENT_ACK_TIMEOUT=300
 ```
 
+### Переход на ee (Fake TLS)
+
+Режим `ee` включает `tls = true` в `telemt` и секцию `[censorship].tls_domain`. На панели Marzban секреты пользователей становятся с префиксом `ee` и встроенным доменом в hex. **Старые ссылки `dd` перестанут работать** — пользователям нужны новые `tg://proxy`.
+
+**На узле** в `.env`:
+
+```env
+MTPROTO_MODE=ee
+MTPROTO_TLS_DOMAIN=example.com
+```
+
+`MTPROTO_TLS_DOMAIN` — hostname для SNI (тот же смысл, что на панели), без `https://`. Выбирайте реальный домен с нормальным TLS-поведением; иначе клиенты и фильтры могут вести себя непредсказуемо.
+
+Опционально для лучшей проходимости у части операторов: **порт 443** — тогда и `MTPROTO_PORT=443`, и на панели `MTPROTO_PUBLIC_PORT=443`, порт свободен на сервере и открыт в фаерволе.
+
+После правок `.env` пересоберите и перезапустите `marzban-node` и `mtproto` (см. раздел про пересборку ниже), чтобы обновился `telemt.toml`.
+
+**На основном хосте (панель)** в `.env`:
+
+```env
+MTPROTO_SECRET_MODE=ee
+MTPROTO_TLS_DOMAIN=example.com
+MTPROTO_PUBLIC_HOST=<тот же хост, что MTPROTO_DOMAIN на узле>
+MTPROTO_PUBLIC_PORT=<тот же порт, что MTPROTO_PORT на узле>
+```
+
+Синк проверяет совпадение `mode`, `domain`, `port` между панелью и ответом ноды. Любое расхождение даёт `runtime mismatch` и синк не применится.
+
+**Проверка после ee:**
+
+```bash
+sed -n '1,80p' /var/lib/marzban-node/mtproto/telemt.toml
+```
+
+Ожидается: `secure = false`, `tls = true`, блок `[censorship]` с `tls_domain`.
+
+В логах панели — успешный MTProto sync без `runtime mismatch`. Тестовая ссылка: `secret` начинается с `ee`.
+
 ### 5. Убедиться, что основной `marzban-node` тоже читает `.env`
 
 Открой:
@@ -250,6 +297,8 @@ MTPROTO_PUBLIC_HOST=tg.the-tech.studio
 MTPROTO_PUBLIC_PORT=1443
 MTPROTO_SECRET_MODE=dd
 ```
+
+Для **ee** добавьте строку `MTPROTO_TLS_DOMAIN=...` (тот же домен, что на узле) и `MTPROTO_SECRET_MODE=ee`.
 
 Важно:
 

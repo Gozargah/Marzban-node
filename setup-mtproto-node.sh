@@ -237,6 +237,7 @@ echo "   MTPROTO_PUBLIC_PORT=${MTPROTO_PORT}"
 echo "   MTPROTO_SECRET_MODE=${MTPROTO_MODE}"
 if [ "$MTPROTO_MODE" = "ee" ]; then
   echo "   MTPROTO_TLS_DOMAIN=${MTPROTO_TLS_DOMAIN}"
+  echo "   Users need new tg://proxy links (ee secrets); old dd links stop working."
 fi
 echo "2. Restart main Marzban so it syncs MTProto users to this node."
 echo "3. Node telemt runtime defaults written:"
