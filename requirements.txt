@@ -7,6 +7,7 @@ fastapi==0.115.2
 h11==0.14.0
 idna==3.7
 plumbum==1.8.1
+psutil==5.9.4
 pycparser==2.21
 pydantic==2.6.1
 pydantic_core==2.16.2

@@ -13,6 +13,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH
 from logger import logger
+from node_metrics import get_metrics_snapshot, start_metrics_collector
 from mtproto import apply_mtproto_users, get_mtproto_status
 from xray import XRayConfig, XRayCore
 
@@ -49,6 +50,8 @@ class Service(object):
         self.core_version = self.core.get_version()
         self.config = None
 
+        start_metrics_collector(lambda: self.core.started)
+
         self.router.add_api_route("/", self.base, methods=["POST"])
         self.router.add_api_route("/ping", self.ping, methods=["POST"])
         self.router.add_api_route("/connect", self.connect, methods=["POST"])
@@ -60,6 +63,11 @@ class Service(object):
         self.router.add_api_route("/mtproto/apply", self.apply_mtproto, methods=["POST"])
 
         self.router.add_websocket_route("/logs", self.logs)
+        self.router.add_api_route("/metrics", self.metrics, methods=["GET"])
+
+    def metrics(self):
+        """Load-balancer metrics (mTLS only; no session)."""
+        return get_metrics_snapshot()
 
     def match_session_id(self, session_id: UUID):
         if session_id != self.session_id:

@@ -86,3 +86,6 @@ HYSTERIA2_DOWN_MBPS = config("HYSTERIA2_DOWN_MBPS", cast=int, default=500)
 # TLS cert for hysteriad — defaults to the node's own SSL cert
 HYSTERIA2_CERT_FILE = config("HYSTERIA2_CERT_FILE", default=SSL_CERT_FILE)
 HYSTERIA2_KEY_FILE = config("HYSTERIA2_KEY_FILE", default=SSL_KEY_FILE)
+
+# Smart DNS /metrics sampler interval (seconds)
+NODE_METRICS_INTERVAL = config("NODE_METRICS_INTERVAL", cast=float, default=3.0)
