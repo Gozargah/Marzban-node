@@ -206,12 +206,20 @@ def _loop(core_started: Callable[[], bool]) -> None:
             _traffic_fail_streak = 0
             _last_total_bytes = None
 
-        status = "UP"
-        if not core_started():
+        # UP if Xray is running OR Hysteria trafficStats responds (nodes may serve HY2 without Xray started).
+        hysteria_cfg = (
+            HYSTERIA2_ENABLED
+            and (HYSTERIA2_TRAFFIC_SECRET or "").strip()
+            and base
+        )
+        hysteria_stats_ok = bool(hysteria_cfg and _traffic_fail_streak < 3)
+
+        if hysteria_cfg and _traffic_fail_streak >= 3:
             status = "DOWN"
-        elif HYSTERIA2_ENABLED and (HYSTERIA2_TRAFFIC_SECRET or "").strip() and base:
-            if _traffic_fail_streak >= 3:
-                status = "DOWN"
+        elif core_started() or hysteria_stats_ok:
+            status = "UP"
+        else:
+            status = "DOWN"
 
         with _lock:
             _snapshot["active_connections"] = active
