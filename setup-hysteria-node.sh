@@ -64,7 +64,10 @@ fi
 [ -z "$NODE_COMPOSE_DIR" ] && NODE_COMPOSE_DIR="/opt/marzban-node"
 
 NODE_DATA_DIR="${NODE_DATA_DIR:-/var/lib/marzban-node}"
-ENV_FILE="${NODE_COMPOSE_DIR}/.env"
+# IMPORTANT: docker-compose.yml loads /var/lib/marzban-node/.env into the container
+# (see env_file: directive). Do NOT write to ${NODE_COMPOSE_DIR}/.env — that file
+# is only used for docker-compose variable substitution, not container env vars.
+ENV_FILE="${NODE_DATA_DIR}/.env"
 HYSTERIA_YAML="${NODE_DATA_DIR}/hysteria.yaml"
 OVERRIDE_FILE="${NODE_COMPOSE_DIR}/docker-compose.override.yml"
 

@@ -184,10 +184,19 @@ def _loop(core_started: Callable[[], bool]) -> None:
                 if _last_total_bytes is not None and _last_sample_ts > 0:
                     dt = now - _last_sample_ts
                     if dt > 0.05:
-                        delta = max(0, total_b - _last_total_bytes)
-                        bw_mbps = (delta * 8.0 / dt) / 1_000_000.0
-                _last_total_bytes = total_b
-                _last_sample_ts = now
+                        delta = total_b - _last_total_bytes
+                        if delta < 0:
+                            # Marzban panel cleared counters via /traffic?clear=true.
+                            # Reset baseline so next interval is accurate.
+                            _last_total_bytes = total_b
+                            _last_sample_ts = now
+                        else:
+                            bw_mbps = (delta * 8.0 / dt) / 1_000_000.0
+                            _last_total_bytes = total_b
+                            _last_sample_ts = now
+                else:
+                    _last_total_bytes = total_b
+                    _last_sample_ts = now
         elif traffic_url and (HYSTERIA2_TRAFFIC_SECRET or "").strip() and not HYSTERIA2_ENABLED:
             tmap = _fetch_json(traffic_url)
             if tmap is not None:
@@ -198,10 +207,17 @@ def _loop(core_started: Callable[[], bool]) -> None:
                 if _last_total_bytes is not None and _last_sample_ts > 0:
                     dt = now - _last_sample_ts
                     if dt > 0.05:
-                        delta = max(0, total_b - _last_total_bytes)
-                        bw_mbps = (delta * 8.0 / dt) / 1_000_000.0
-                _last_total_bytes = total_b
-                _last_sample_ts = now
+                        delta = total_b - _last_total_bytes
+                        if delta < 0:
+                            _last_total_bytes = total_b
+                            _last_sample_ts = now
+                        else:
+                            bw_mbps = (delta * 8.0 / dt) / 1_000_000.0
+                            _last_total_bytes = total_b
+                            _last_sample_ts = now
+                else:
+                    _last_total_bytes = total_b
+                    _last_sample_ts = now
         else:
             _traffic_fail_streak = 0
             _last_total_bytes = None

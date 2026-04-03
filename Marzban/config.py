@@ -131,6 +131,14 @@ NOTIFY_DAYS_LEFT = config(
 
 DISABLE_RECORDING_NODE_USAGE = config("DISABLE_RECORDING_NODE_USAGE", cast=bool, default=False)
 
+# Hysteria2 traffic stats — required by record_hysteria_usage.py
+# Must match trafficStats.secret in hysteria.yaml on every node/panel host.
+HYSTERIA2_TRAFFIC_SECRET = config("HYSTERIA2_TRAFFIC_SECRET", default="")
+# Local hysteriad stats listen address (on the panel server itself, if hysteriad runs there).
+HYSTERIA2_TRAFFIC_LISTEN = config("HYSTERIA2_TRAFFIC_LISTEN", default="127.0.0.1:9999")
+# Port to poll on each remote Marzban-node for hysteriad stats.
+HYSTERIA2_NODE_TRAFFIC_PORT = config("HYSTERIA2_NODE_TRAFFIC_PORT", cast=int, default=9999)
+
 # headers: profile-update-interval, support-url, profile-title, announce, announce-url
 SUB_UPDATE_INTERVAL = config("SUB_UPDATE_INTERVAL", default="12")
 SUB_SUPPORT_URL = config("SUB_SUPPORT_URL", default="https://t.me/")
