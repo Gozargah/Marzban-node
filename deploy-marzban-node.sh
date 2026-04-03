@@ -107,6 +107,15 @@ fi
 
 command -v docker >/dev/null || err "docker не найден в PATH"
 
+DATA_ENV="/var/lib/marzban-node/.env"
+if [ ! -f "$DATA_ENV" ]; then
+    log "Создаю $DATA_ENV — задайте HYSTERIA2_TRAFFIC_SECRET= (как trafficStats.secret в hysteria.yaml), см. .env.example"
+    if ! mkdir -p /var/lib/marzban-node 2>/dev/null || ! touch "$DATA_ENV" 2>/dev/null; then
+        sudo mkdir -p /var/lib/marzban-node
+        sudo touch "$DATA_ENV"
+    fi
+fi
+
 compose_cmd="docker compose"
 docker compose version &>/dev/null || compose_cmd="docker-compose"
 

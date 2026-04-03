@@ -3,6 +3,10 @@ services:
     build: .
     restart: always
     network_mode: host
+    # HYSTERIA2_TRAFFIC_SECRET and other vars (see .env.example). Create file on the server:
+    #   sudo nano /var/lib/marzban-node/.env
+    env_file:
+      - /var/lib/marzban-node/.env
 
     volumes:
       - /var/lib/marzban-node:/var/lib/marzban-node
