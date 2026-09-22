@@ -1,0 +1,19 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[env]
+SERVICE_PROTOCOL = "rest"
+# Railway terminates TLS at the edge and the node is reached over the
+# private network, so plain HTTP is the simplest working default.
+# Set to "true" if you want the node to terminate TLS itself (needs
+# SSL_CERT_FILE / SSL_KEY_FILE / SSL_CLIENT_CERT_FILE too).
+SERVICE_TLS = "false"
+SERVICE_HOST = "0.0.0.0"
+XRAY_EXECUTABLE_PATH = "/usr/local/bin/xray"
+XRAY_ASSETS_PATH = "/usr/local/share/xray"
+SSL_DIR = "/var/lib/marzban-node"
